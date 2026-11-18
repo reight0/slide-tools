@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Slide Tools</title>
+<script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+<style>
+  :root {
+    --ink: #1d2433; --muted: #6b7385; --line: #dde1e8; --bg: #f6f7f9; --card: #fff;
+    --accent: #1f5fad; --accent-soft: #e7eef8; --ok: #2f7d4f; --err: #b3261e;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink);
+    font: 12px/1.35 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+  body { padding-bottom: 44px; }
+  header { position: sticky; top: 0; z-index: 5; background: var(--ink); color: #fff; padding: 8px 10px; }
+  header .title { font-weight: 700; letter-spacing: .02em; font-size: 13px; }
+  header .master { margin-top: 4px; display: flex; align-items: center; gap: 6px; font-size: 11px; color: #c9cfdb; }
+  header .master b { color: #fff; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px; display: inline-block; vertical-align: bottom; }
+  header button { background: rgba(255,255,255,.12); color: #fff; border: 1px solid rgba(255,255,255,.25); }
+  header button:hover { background: rgba(255,255,255,.22); }
+  header button.on { background: #e3a21a; border-color: #e3a21a; color: #1d2433; }
+  .warn { background: #fff4d6; color: #6a4a00; padding: 8px 10px; border-bottom: 1px solid #f0d58a; display: none; }
+
+  details { background: var(--card); border-bottom: 1px solid var(--line); }
+  summary { cursor: pointer; padding: 7px 10px; font-weight: 700; font-size: 11px; text-transform: uppercase;
+    letter-spacing: .06em; color: var(--muted); list-style: none; display: flex; justify-content: space-between; }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: "\25BE"; font-size: 10px; }
+  details:not([open]) summary::after { content: "\25B8"; }
+  .sec { padding: 0 10px 9px; }
+  .row { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin-bottom: 5px; }
+  .row .lbl { width: 56px; color: var(--muted); font-size: 11px; flex: none; }
+  .grid6 { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; margin-bottom: 5px; }
+
+  button { font: inherit; color: var(--ink); background: #fff; border: 1px solid var(--line); border-radius: 5px;
+    padding: 4px 7px; cursor: pointer; min-height: 26px; }
+  button:hover { border-color: var(--accent); background: var(--accent-soft); }
+  button:active { transform: translateY(1px); }
+  button.ico { padding: 3px; display: flex; align-items: center; justify-content: center; }
+  button.ico svg { width: 18px; height: 18px; }
+  button.arm { background: #fde7e5; border-color: var(--err); color: var(--err); }
+  input[type=text], input[type=number], select { font: inherit; border: 1px solid var(--line); border-radius: 5px; padding: 3px 5px; min-height: 26px; background: #fff; color: var(--ink); }
+  input.n { width: 52px; }
+  input.w { flex: 1; min-width: 60px; }
+  .unit { color: var(--muted); font-size: 11px; }
+
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 5px; overflow: hidden; }
+  .seg button { border: 0; border-radius: 0; border-right: 1px solid var(--line); }
+  .seg button:last-child { border-right: 0; }
+  .seg button.on { background: var(--accent); color: #fff; }
+  .sw { display: grid; grid-template-columns: repeat(10, 1fr); gap: 3px; margin-bottom: 5px; }
+  .sw button { padding: 0; min-height: 20px; height: 20px; border-radius: 4px; border: 1px solid rgba(0,0,0,.15); }
+  .sw button:hover { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .note { color: var(--muted); font-size: 11px; margin: 2px 0 6px; }
+  #report { white-space: pre-wrap; background: var(--bg); border: 1px solid var(--line); border-radius: 5px; padding: 6px; font-size: 11px; display: none; margin-top: 4px; }
+
+  #status { position: fixed; bottom: 0; left: 0; right: 0; padding: 8px 10px; background: #fff; border-top: 1px solid var(--line);
+    font-size: 11px; color: var(--muted); min-height: 34px; }
+  #status.ok { color: var(--ok); } #status.err { color: var(--err); }
+</style>
+</head>
+<body>
+<header>
+  <div class="title">SLIDE TOOLS</div>
+  <div class="master">Master: <b id="masterName">nothing selected</b>
+    <button id="pinBtn" title="Lock the current selection's master so it stays the reference">Pin</button>
+  </div>
+</header>
+<div class="warn" id="warn"></div>
+
+<details open><summary>Position</summary><div class="sec">
+  <div class="grid6">
+    <button class="ico" data-cmd="align" data-a="L" title="Align left (to master; one object: to slide)"></button>
+    <button class="ico" data-cmd="align" data-a="C" title="Align centre"></button>
+    <button class="ico" data-cmd="align" data-a="R" title="Align right"></button>
+    <button class="ico" data-cmd="align" data-a="T" title="Align top"></button>
+    <button class="ico" data-cmd="align" data-a="M" title="Align middle"></button>
+    <button class="ico" data-cmd="align" data-a="B" title="Align bottom"></button>
+  </div>
+  <div class="row"><span class="lbl">Distribute</span>
+    <button data-cmd="distribute" data-a="H" title="Equal horizontal gaps, outer objects fixed">Horizontal</button>
+    <button data-cmd="distribute" data-a="V" title="Equal vertical gaps, outer objects fixed">Vertical</button>
+  </div>
+  <div class="row"><span class="lbl">Gap</span>
+    <input class="n" id="gapCm" type="number" step="0.05" value="0.25"><span class="unit">cm</span>
+    <button data-cmd="gap" data-a="H">Horizontal</button><button data-cmd="gap" data-a="V">Vertical</button>
+  </div>
+  <div class="row"><span class="lbl">Stack</span>
+    <button data-cmd="stack" data-a="H" title="Side by side, in selection order">Side by side</button>
+    <button data-cmd="stack" data-a="V" title="On top of each other, in selection order">Vertical</button>
+    <button data-cmd="swap" title="Swap two objects (position and layer)">Swap</button>
+  </div>
+  <div class="row"><span class="lbl">Dock</span>
+    <button data-cmd="dock" data-a="L" title="Move to the master's left side">Left of</button>
+    <button data-cmd="dock" data-a="R" title="Move to the master's right side">Right of</button>
+    <button data-cmd="dock" data-a="T" title="Move onto the master's top">Above</button>
+    <button data-cmd="dock" data-a="B" title="Move below the master">Below</button>
+  </div>
+  <div class="row"><span class="lbl"></span>
+    <button data-cmd="canon" title="Vertical position inside the master, bottom margin = 2 x top">Golden canon</button>
+  </div>
+</div></details>
+
+<details open><summary>Size</summary><div class="sec">
+  <div class="row"><span class="lbl">Match</span>
+    <button data-cmd="same" data-a="W">Width</button><button data-cmd="same" data-a="H">Height</button><button data-cmd="same" data-a="B">Both</button>
+    <button data-cmd="fillgap" title="Grow each object until it touches the master">Fill gap</button>
+  </div>
+  <div class="row"><span class="lbl">Stretch</span>
+    <button data-cmd="stretch" data-a="L">Left</button><button data-cmd="stretch" data-a="R">Right</button>
+    <button data-cmd="stretch" data-a="T">Top</button><button data-cmd="stretch" data-a="B">Bottom</button>
+  </div>
+  <div class="row"><span class="lbl">Resize</span>
+    <input class="n" id="resizePct" type="number" value="80"><span class="unit">%</span>
+    <label class="unit"><input type="checkbox" id="resizeText" checked> fonts &amp; lines</label>
+    <button data-cmd="resize">Apply</button>
+  </div>
+  <div class="row"><span class="lbl">Dimensions</span>
+    <input class="n" id="dL" placeholder="Left"><input class="n" id="dT" placeholder="Top">
+    <input class="n" id="dW" placeholder="Width"><input class="n" id="dH" placeholder="Height">
+  </div>
+  <div class="row"><span class="lbl"></span><span class="unit">cm, blank = keep</span>
+    <button data-cmd="dimsApply">Apply</button>
+  </div>
+  <div class="row"><span class="lbl">Position</span>
+    <button data-cmd="copyPos" title="Remember the master's position and size">Copy</button>
+    <button data-cmd="pastePos" data-a="all">Paste</button>
+    <button data-cmd="pastePos" data-a="pos">Pos only</button>
+    <button data-cmd="pastePos" data-a="size">Size only</button>
+  </div>
+</div></details>
+
+<details><summary>Shape</summary><div class="sec">
+  <div class="row"><span class="lbl">Arrows</span>
+    <button data-cmd="chain" title="Chevrons in a chain: master's size and angle, left to right">Process chain</button>
+    <button data-cmd="angles" title="Same visible angle as the master, whatever the size">Match angles</button>
+  </div>
+  <div class="row"><span class="lbl">Corners</span>
+    <button data-cmd="radiusMatch" title="Same corner radius as the master">Match</button>
+    <input class="n" id="radiusCm" type="number" step="0.05" value="0.2"><span class="unit">cm</span>
+    <button data-cmd="radiusSet">Set</button>
+  </div>
+  <div class="row"><span class="lbl">Select</span>
+    <button data-cmd="similar" data-a="TC" title="Same type and fill colour">Type+colour</button>
+    <button data-cmd="similar" data-a="T">Type</button>
+    <button data-cmd="similar" data-a="S">Size</button>
+  </div>
+  <div class="row"><span class="lbl">Style</span>
+    <button data-cmd="copyStyle" title="Copy fill, line and font from the master to the others">Copy style from master</button>
+  </div>
+</div></details>
+
+<details open><summary>Colour</summary><div class="sec">
+  <div class="row"><span class="lbl">Apply to</span>
+    <span class="seg" id="target"><button data-t="fill" class="on">Fill</button><button data-t="line">Line</button><button data-t="text">Text</button></span>
+  </div>
+  <div class="note">Theme (this deck)</div>
+  <div class="sw" id="themeSw"></div>
+  <div class="note">Brand</div>
+  <div class="sw" id="brandSw"></div>
+  <div class="row">
+    <input type="color" id="customCol" value="#1f5fad"><button data-cmd="customColour">Apply custom</button>
+    <button data-cmd="noFill">No fill</button><button data-cmd="noLine">No line</button>
+  </div>
+</div></details>
+
+<details><summary>Text</summary><div class="sec">
+  <div class="row"><span class="lbl">Margins</span>
+    <button data-cmd="margins" data-a="0">Zero</button>
+    <input class="n" id="marginCm" type="number" step="0.05" value="0.1"><span class="unit">cm</span>
+    <button data-cmd="margins">Set</button>
+  </div>
+  <div class="row"><span class="lbl">Box</span>
+    <button data-cmd="fitText">Fit to text</button><button data-cmd="wrap">Wrap on/off</button>
+  </div>
+  <div class="row"><span class="lbl">Bullets</span>
+    <button data-cmd="bullets">On/off</button>
+    <button data-cmd="indent" data-a="1" title="Indent one level">Indent &rarr;</button>
+    <button data-cmd="indent" data-a="-1" title="Outdent one level">&larr; Outdent</button>
+  </div>
+  <div class="row"><span class="lbl">Boxes</span>
+    <button data-cmd="merge" title="Merge into the first-selected box, in selection order">Merge</button>
+    <button data-cmd="split" title="One box per paragraph">Split paragraphs</button>
+  </div>
+  <div class="row"><span class="lbl">Find</span><input type="text" class="w" id="findTxt"></div>
+  <div class="row"><span class="lbl">Replace</span><input type="text" class="w" id="replTxt">
+    <button data-cmd="replace" title="In the selected objects, or the whole current slide if nothing is selected">Go</button>
+  </div>
+</div></details>
+
+<details><summary>View</summary><div class="sec">
+  <div class="row">
+    <button data-cmd="hide">Hide selected</button><button data-cmd="unhide">Unhide on slide</button>
+  </div>
+  <div class="row"><span class="lbl">Go to</span>
+    <input class="n" id="gotoNum" type="number" min="1"><button data-cmd="gotoSlide">Go</button>
+  </div>
+</div></details>
+
+<details><summary>Deck</summary><div class="sec">
+  <div class="row">
+    <button data-cmd="check">Check deck</button>
+    <button data-cmd="fixSpaces" class="confirm">Fix double spaces</button>
+    <button data-cmd="storyline" title="New slide listing every slide title">Storyline slide</button>
+  </div>
+  <div id="report"></div>
+</div></details>
+
+<details><summary>Insert</summary><div class="sec">
+  <div class="row"><span class="lbl">Sticker</span>
+    <select id="stickerTxt">
+      <option>Draft</option><option>Preliminary</option><option>For discussion</option>
+      <option>Illustrative</option><option>Indicative</option><option>Confidential</option><option>Backup</option>
+    </select>
+    <button data-cmd="sticker">Insert</button>
+  </div>
+  <div class="row"><span class="lbl">Harvey</span>
+    <button data-cmd="harvey" data-a="0">0</button><button data-cmd="harvey" data-a="25">25</button>
+    <button data-cmd="harvey" data-a="50">50</button><button data-cmd="harvey" data-a="75">75</button>
+    <button data-cmd="harvey" data-a="100">100</button>
+  </div>
+</div></details>
+
+<details><summary>Settings</summary><div class="sec">
+  <div class="note">Brand colours, hex, comma-separated (up to 10)</div>
+  <div class="row"><input type="text" class="w" id="brandList"><button data-cmd="saveBrand">Save</button></div>
+  <div class="note">The master is the object you clicked last. Pin it to keep it as the reference while you add or remove other objects.</div>
+</div></details>
+
+<div id="status">Ready.</div>
+
+<script>
+"use strict";
+const CM = 28.3464567;
+const DEFAULT_BRAND = "#0B2341,#1F5FAD,#5B9BD5,#7F7F7F,#D9D9D9,#E3A21A";
+const TAG_HIDDEN = "SLIDETOOLSHIDDEN";
+const S = { order: [], pinned: null, copyBox: null, target: "fill", dark: "#000000", light: "#FFFFFF", v110: false };
+
+class UErr extends Error {}
+const $ = (q) => document.querySelector(q);
+const num = (id) => { const v = parseFloat(String($(id).value).replace(",", ".")); if (isNaN(v)) throw new UErr("Enter a number first."); return v; };
+
+function status(msg, kind) { const el = $("#status"); el.textContent = msg; el.className = kind || ""; }
+
+// ---------- icons ----------
+const ICON = {
+  L: '<path d="M2 1v16" stroke="currentColor" stroke-width="1.6"/><rect x="4" y="3" width="10" height="4" rx="1" fill="currentColor"/><rect x="4" y="10" width="6" height="4" rx="1" fill="currentColor"/>',
+  C: '<path d="M9 1v16" stroke="currentColor" stroke-width="1.6"/><rect x="3" y="3" width="12" height="4" rx="1" fill="currentColor" opacity=".85"/><rect x="5" y="10" width="8" height="4" rx="1" fill="currentColor" opacity=".85"/>',
+  R: '<path d="M16 1v16" stroke="currentColor" stroke-width="1.6"/><rect x="4" y="3" width="10" height="4" rx="1" fill="currentColor"/><rect x="8" y="10" width="6" height="4" rx="1" fill="currentColor"/>',
+  T: '<path d="M1 2h16" stroke="currentColor" stroke-width="1.6"/><rect x="3" y="4" width="4" height="10" rx="1" fill="currentColor"/><rect x="10" y="4" width="4" height="6" rx="1" fill="currentColor"/>',
+  M: '<path d="M1 9h16" stroke="currentColor" stroke-width="1.6"/><rect x="3" y="3" width="4" height="12" rx="1" fill="currentColor" opacity=".85"/><rect x="10" y="5" width="4" height="8" rx="1" fill="currentColor" opacity=".85"/>',
+  B: '<path d="M1 16h16" stroke="currentColor" stroke-width="1.6"/><rect x="3" y="4" width="4" height="10" rx="1" fill="currentColor"/><rect x="10" y="8" width="4" height="6" rx="1" fill="currentColor"/>',
+};
+document.querySelectorAll('button.ico[data-cmd="align"]').forEach(b => {
+  b.innerHTML = '<svg viewBox="0 0 18 18" fill="none">' + ICON[b.dataset.a] + "</svg>";
+});
+
+// ---------- startup ----------
+Office.onReady((info) => {
+  if (info.host !== Office.HostType.PowerPoint) { status("Open this pane in PowerPoint.", "err"); return; }
+  const req = Office.context.requirements;
+  S.v110 = req.isSetSupported("PowerPointApi", "1.10");
+  if (!req.isSetSupported("PowerPointApi", "1.8")) {
+    showWarn("Your PowerPoint is too old for most of these tools. Update PowerPoint (Help > Check for Updates).");
+  } else if (!S.v110) {
+    showWarn("Some tools (text, angles, corners, hide, theme colours) need a newer PowerPoint. Help > Check for Updates.");
+  }
+  wire();
+  renderBrand();
+  Office.context.document.addHandlerAsync(Office.EventType.DocumentSelectionChanged, () => debounce(onSelection, 120));
+  onSelection();
+  loadTheme();
+});
+
+function showWarn(t) { const w = $("#warn"); w.textContent = t; w.style.display = "block"; }
+
+let dTimer = null;
+function debounce(fn, ms) { clearTimeout(dTimer); dTimer = setTimeout(fn, ms); }
+
+function wire() {
+  document.querySelectorAll("button[data-cmd]").forEach(b => b.addEventListener("click", () => {
+    const fn = CMD[b.dataset.cmd];
+    if (!fn) return;
+    if (b.classList.contains("confirm") && !b.classList.contains("arm")) {
+      b.classList.add("arm"); const old = b.textContent; b.textContent = "Click again to confirm";
+      setTimeout(() => { b.classList.remove("arm"); b.textContent = old; }, 3000);
+      return;
+    }
+    if (b.classList.contains("arm")) { b.classList.remove("arm"); }
+    exec(b.textContent.trim() || b.title, (ctx) => fn(b.dataset.a)(ctx));
+  }));
+  $("#target").addEventListener("click", (e) => {
+    const t = e.target.closest("button"); if (!t) return;
+    S.target = t.dataset.t;
+    document.querySelectorAll("#target button").forEach(x => x.classList.toggle("on", x === t));
+  });
+  $("#pinBtn").addEventListener("click", () => exec("Pin", pinToggle));
+}
+
+async function exec(label, fn) {
+  status("Working...");
+  try {
+    let msg;
+    await PowerPoint.run(async (ctx) => { msg = await fn(ctx); });
+    status(msg || (label + " done."), "ok");
+  } catch (e) {
+    const m = (e instanceof UErr) ? e.message : ("Didn't work: " + (e.message || e));
+    status(m, "err");
+    if (!(e instanceof UErr)) console.error(e);
+  }
+}
+
+// ---------- selection & master tracking ----------
+async function onSelection() {
+  try {
+    await PowerPoint.run(async (ctx) => {
+      const col = ctx.presentation.getSelectedShapes();
+      col.load("items/id,items/name,items/left,items/top,items/width,items/height");
+      await ctx.sync();
+      const ids = col.items.map(s => s.id);
+      S.order = S.order.filter(id => ids.includes(id));
+      ids.forEach(id => { if (!S.order.includes(id)) S.order.push(id); });
+      const items = orderItems(col.items);
+      const m = items.length ? masterOf(items) : null;
+      $("#masterName").textContent = m ? (m.name + (items.length > 1 ? "  (+" + (items.length - 1) + ")" : "")) : "nothing selected";
+      $("#pinBtn").classList.toggle("on", !!S.pinned && ids.includes(S.pinned));
+      if (m) {
+        $("#dL").value = (m.left / CM).toFixed(2); $("#dT").value = (m.top / CM).toFixed(2);
+        $("#dW").value = (m.width / CM).toFixed(2); $("#dH").value = (m.height / CM).toFixed(2);
+      }
+    });
+  } catch (e) { /* selection in a place without shapes, ignore */ }
+}
+
+function orderItems(items) {
+  const pos = (id) => { const i = S.order.indexOf(id); return i < 0 ? 1e9 : i; };
+  return items.slice().sort((a, b) => pos(a.id) - pos(b.id));
+}
+function masterOf(items) {
+  if (S.pinned) { const p = items.find(s => s.id === S.pinned); if (p) return p; }
+  return items[items.length - 1];
+}
+
+async function pinToggle(ctx) {
+  if (S.pinned) { S.pinned = null; $("#pinBtn").classList.remove("on"); return "Master unpinned: the last-clicked object is the master again."; }
+  const { master } = await getSel(ctx, 1);
+  S.pinned = master.id; $("#pinBtn").classList.add("on");
+  return "Pinned " + master.name + " as master.";
+}
+
+// items in click order, master = last (or pinned); others = everything else
+async function getSel(ctx, min) {
+  const col = ctx.presentation.getSelectedShapes();
+  col.load("items/id,items/name,items/type,items/left,items/top,items/width,items/height");
+  await ctx.sync();
+  if (col.items.length < (min || 1)) {
+    throw new UErr((min || 1) <= 1 ? "Select an object first." : "Select at least " + min + " objects. The one you click last is the master.");
+  }
+  let items = orderItems(col.items);
+  const master = masterOf(items);
+  items = items.filter(s => s.id !== master.id).concat([master]);
+  return { items, master, others: items.slice(0, -1) };
+}
+
+async function slideSize(ctx) {
+  if (S.v110) {
+    const ps = ctx.presentation.pageSetup; ps.load("slideWidth,slideHeight"); await ctx.sync();
+    return { w: ps.slideWidth, h: ps.slideHeight };
+  }
+  return { w: 960, h: 540 };
+}
+
+async function currentSlide(ctx) {
+  const sl = ctx.presentation.getSelectedSlides(); sl.load("items/id"); await ctx.sync();
+  if (!sl.items.length) throw new UErr("Click into a slide first.");
+  return sl.items[0];
+}
+
+function box(s, l, t, w, h) {
+  if (w != null && w > 0) s.width = w;
+  if (h != null && h > 0) s.height = h;
+  if (l != null) s.left = l;
+  if (t != null) s.top = t;
+}
+
+function need110() { if (!S.v110) throw new UErr("This tool needs a newer PowerPoint (Help > Check for Updates)."); }
+
+// text frames of shapes (skips shapes without text)
+async function textFrames(ctx, shapes) {
+  need110();
+  const tfs = shapes.map(s => s.getTextFrameOrNullObject());
+  tfs.forEach(tf => tf.load("hasText"));
+  await ctx.sync();
+  return tfs.map((tf, i) => ({ shape: shapes[i], tf })).filter(x => !x.tf.isNullObject);
+}
+
+// ---------- adjustments (units differ between builds, so detect) ----------
+async function readAdj(ctx, shapes) {
+  need110();
+  shapes.forEach(s => s.adjustments.load("count"));
+  await ctx.sync();
+  const res = shapes.map(s => s.adjustments.count > 0 ? s.adjustments.get(0) : null);
+  await ctx.sync();
+  return res.map(r => r ? r.value : null);
+}
+const fracUnit = (v) => (Math.abs(v) > 1.5 ? 100000 : 1);
+
+// ---------- commands ----------
+// each command: (arg) => async (ctx) => message
+const CMD = {
+  align: (a) => async (ctx) => {
+    const { items, master, others } = await getSel(ctx, 1);
+    let r, list;
+    if (items.length === 1) { const sz = await slideSize(ctx); r = { l: 0, t: 0, w: sz.w, h: sz.h }; list = items; }
+    else { r = { l: master.left, t: master.top, w: master.width, h: master.height }; list = others; }
+    list.forEach(s => {
+      if (a === "L") s.left = r.l;
+      if (a === "C") s.left = r.l + (r.w - s.width) / 2;
+      if (a === "R") s.left = r.l + r.w - s.width;
+      if (a === "T") s.top = r.t;
+      if (a === "M") s.top = r.t + (r.h - s.height) / 2;
+      if (a === "B") s.top = r.t + r.h - s.height;
+    });
+    await ctx.sync();
+    return items.length === 1 ? "Aligned to the slide." : "Aligned " + others.length + " to " + master.name + ".";
+  },
+
+  distribute: (a) => async (ctx) => distributeImpl(ctx, a, null),
+  gap: (a) => async (ctx) => distributeImpl(ctx, a, num("#gapCm") * CM),
+
+  stack: (a) => async (ctx) => {
+    const { items } = await getSel(ctx, 2);
+    let pos = a === "H" ? items[0].left + items[0].width : items[0].top + items[0].height;
+    for (let i = 1; i < items.length; i++) {
+      if (a === "H") { items[i].left = pos; pos += items[i].width; }
+      else { items[i].top = pos; pos += items[i].height; }
+    }
+    await ctx.sync();
+  },
+
+  swap: () => async (ctx) => {
+    const { items } = await getSel(ctx, 2);
+    if (items.length !== 2) throw new UErr("Select exactly two objects to swap.");
+    const [a, b] = items;
+    const al = a.left, at = a.top;
+    a.left = b.left; a.top = b.top; b.left = al; b.top = at;
+    await ctx.sync();
+    a.load("zOrderPosition"); b.load("zOrderPosition"); await ctx.sync();
+    let lo = a.zOrderPosition < b.zOrderPosition ? a : b, hi = lo === a ? b : a;
+    const zlo = lo.zOrderPosition, zhi = hi.zOrderPosition;
+    for (let i = 0; i < zhi - zlo; i++) lo.setZOrder("BringForward");
+    for (let i = 0; i < zhi - zlo - 1; i++) hi.setZOrder("SendBackward");
+    await ctx.sync();
+  },
+
+  dock: (a) => async (ctx) => {
+    const { master: m, others } = await getSel(ctx, 2);
+    others.forEach(s => {
+      if (a === "L") s.left = m.left - s.width;
+      if (a === "R") s.left = m.left + m.width;
+      if (a === "T") s.top = m.top - s.height;
+      if (a === "B") s.top = m.top + m.height;
+    });
+    await ctx.sync();
+  },
+
+  canon: () => async (ctx) => {
+    const { master: m, others } = await getSel(ctx, 2);
+    others.forEach(s => { s.top = m.top + (m.height - s.height) / 3; });
+    await ctx.sync();
+  },
+
+  same: (a) => async (ctx) => {
+    const { master: m, others } = await getSel(ctx, 2);
+    others.forEach(s => box(s, null, null, a !== "H" ? m.width : s.width, a !== "W" ? m.height : s.height));
+    await ctx.sync();
+  },
+
+  stretch: (a) => async (ctx) => {
+    const { master: m, others } = await getSel(ctx, 2);
+    others.forEach(s => {
+      const r = s.left + s.width, b = s.top + s.height;
+      if (a === "L" && r > m.left) box(s, m.left, null, r - m.left, s.height);
+      if (a === "R" && m.left + m.width > s.left) box(s, null, null, m.left + m.width - s.left, s.height);
+      if (a === "T" && b > m.top) box(s, null, m.top, s.width, b - m.top);
+      if (a === "B" && m.top + m.height > s.top) box(s, null, null, s.width, m.top + m.height - s.top);
+    });
+    await ctx.sync();
+  },
+
+  fillgap: () => async (ctx) => {
+    const { master: m, others } = await getSel(ctx, 2);
+    const T = 0.5, mr = m.left + m.width, mb = m.top + m.height;
+    others.forEach(s => {
+      const sr = s.left + s.width, sb = s.top + s.height;
+      if (sr <= m.left + T) box(s, null, null, m.left - s.left, s.height);
+      else if (s.left >= mr - T) box(s, mr, null, sr - mr, s.height);
+      else if (sb <= m.top + T) box(s, null, null, s.width, m.top - s.top);
+      else if (s.top >= mb - T) box(s, null, mb, s.width, sb - mb);
+    });
+    await ctx.sync();
+  },
+
+  resize: () => async (ctx) => {
+    const f = num("#resizePct") / 100;
+    if (f <= 0) throw new UErr("Enter a percentage above zero.");
+    const { items } = await getSel(ctx, 1);
+    const x0 = Math.min(...items.map(s => s.left)), y0 = Math.min(...items.map(s => s.top));
+    items.forEach(s => box(s, x0 + (s.left - x0) * f, y0 + (s.top - y0) * f, s.width * f, s.height * f));
+    await ctx.sync();
+    if ($("#resizeText").checked && S.v110) {
+      items.forEach(s => s.lineFormat.load("visible,weight"));
+      const tfs = await textFrames(ctx, items);
+      tfs.forEach(x => x.tf.textRange.font.load("size"));
+      await ctx.sync();
+      items.forEach(s => { if (s.lineFormat.visible && s.lineFormat.weight) s.lineFormat.weight = s.lineFormat.weight * f; });
+      tfs.forEach(x => { if (x.tf.textRange.font.size) x.tf.textRange.font.size = Math.max(1, Math.round(x.tf.textRange.font.size * f * 2) / 2); });
+      await ctx.sync();
+      const mixed = tfs.filter(x => !x.tf.textRange.font.size).length;
+      if (mixed) return "Resized. " + mixed + " text box(es) with mixed font sizes were left as they were.";
+    }
+    return "Resized to " + Math.round(f * 100) + "%.";
+  },
+
+  dimsApply: () => async (ctx) => {
+    const { items } = await getSel(ctx, 1);
+    const g = (id) => { const v = String($(id).value).trim().replace(",", "."); return v === "" ? null : parseFloat(v) * CM; };
+    const L = g("#dL"), T = g("#dT"), W = g("#dW"), H = g("#dH");
+    items.forEach(s => box(s, L, T, W != null ? W : s.width, H != null ? H : s.height));
+    await ctx.sync();
+  },
+
+  copyPos: () => async (ctx) => {
+    const { master: m } = await getSel(ctx, 1);
+    S.copyBox = { l: m.left, t: m.top, w: m.width, h: m.height };
+    return "Copied position and size of " + m.name + ".";
+  },
+
+  pastePos: (a) => async (ctx) => {
+    if (!S.copyBox) throw new UErr("Click Copy on an object first.");
+    const c = S.copyBox, { items } = await getSel(ctx, 1);
+    items.forEach(s => {
+      if (a === "all") box(s, c.l, c.t, c.w, c.h);
+      if (a === "pos") box(s, c.l, c.t, null, null);
+      if (a === "size") box(s, null, null, c.w, c.h);
+    });
+    await ctx.sync();
+  },
+
+  chain: () => async (ctx) => {
+    const { items, master: m } = await getSel(ctx, 2);
+    const [ma] = await readAdj(ctx, [m]);
+    if (ma == null) throw new UErr("The master must be a chevron or pentagon arrow.");
+    const tip = (ma / fracUnit(ma)) * Math.min(m.width, m.height);
+    const sorted = items.slice().sort((a, b) => a.left - b.left);
+    let pos = sorted[0].left;
+    const adjs = await readAdj(ctx, sorted);
+    sorted.forEach((s, i) => {
+      box(s, pos, m.top, m.width, m.height);
+      if (adjs[i] != null) s.adjustments.set(0, ma);
+      pos += m.width - tip + 3;
+    });
+    await ctx.sync();
+    return "Chained " + items.length + " arrows.";
+  },
+
+  angles: () => async (ctx) => {
+    const { master: m, others } = await getSel(ctx, 2);
+    const adjs = await readAdj(ctx, [m].concat(others));
+    if (adjs[0] == null) throw new UErr("The master has no adjustable angle.");
+    const k = adjs[0] * Math.min(m.width, m.height) / m.height;
+    let n = 0;
+    others.forEach((s, i) => {
+      if (adjs[i + 1] == null) return;
+      s.adjustments.set(0, k * s.height / Math.min(s.width, s.height)); n++;
+    });
+    await ctx.sync();
+    return "Matched the angle on " + n + " shape(s).";
+  },
+
+  radiusMatch: () => async (ctx) => {
+    const { master: m, others } = await getSel(ctx, 2);
+    const adjs = await readAdj(ctx, [m].concat(others));
+    if (adjs[0] == null) throw new UErr("The master must be a rounded rectangle.");
+    const unit = fracUnit(adjs[0]);
+    const r = (adjs[0] / unit) * Math.min(m.width, m.height);
+    others.forEach((s, i) => { if (adjs[i + 1] != null) s.adjustments.set(0, Math.min(r / Math.min(s.width, s.height), 0.5) * unit); });
+    await ctx.sync();
+  },
+
+  radiusSet: () => async (ctx) => {
+    const r = num("#radiusCm") * CM;
+    const { items } = await getSel(ctx, 1);
+    const adjs = await readAdj(ctx, items);
+    items.forEach((s, i) => {
+      if (adjs[i] == null) return;
+      s.adjustments.set(0, Math.min(r / Math.min(s.width, s.height), 0.5) * fracUnit(adjs[i]));
+    });
+    await ctx.sync();
+  },
+
+  similar: (a) => async (ctx) => {
+    const { master: m } = await getSel(ctx, 1);
+    const slide = await currentSlide(ctx);
+    const shapes = slide.shapes;
+    shapes.load("items/id,items/type,items/width,items/height");
+    m.fill.load("type,foregroundColor");
+    await ctx.sync();
+    if (a === "TC") { shapes.items.forEach(s => s.fill.load("type,foregroundColor")); await ctx.sync(); }
+    const ids = shapes.items.filter(s => {
+      if (a === "S") return Math.abs(s.width - m.width) < 1 && Math.abs(s.height - m.height) < 1;
+      if (s.type !== m.type) return false;
+      if (a === "TC") return s.fill.type === m.fill.type && s.fill.foregroundColor === m.fill.foregroundColor;
+      return true;
+    }).map(s => s.id);
+    slide.setSelectedShapes(ids);
+    await ctx.sync();
+    return "Selected " + ids.length + " object(s).";
+  },
+
+  copyStyle: () => async (ctx) => {
+    const { master: m, others } = await getSel(ctx, 2);
+    m.fill.load("type,foregroundColor,transparency");
+    m.lineFormat.load("visible,color,weight,dashStyle");
+    await ctx.sync();
+    let mt = null;
+    if (S.v110) {
+      const tf = m.getTextFrameOrNullObject(); tf.load("hasText"); await ctx.sync();
+      if (!tf.isNullObject) { tf.textRange.font.load("name,size,color,bold,italic"); await ctx.sync(); mt = tf.textRange.font; }
+    }
+    others.forEach(s => {
+      if (m.fill.type === "NoFill") s.fill.clear();
+      else if (m.fill.foregroundColor) { s.fill.setSolidColor(m.fill.foregroundColor); if (m.fill.transparency != null) s.fill.transparency = m.fill.transparency; }
+      s.lineFormat.visible = !!m.lineFormat.visible;
+      if (m.lineFormat.visible) {
+        if (m.lineFormat.color) s.lineFormat.color = m.lineFormat.color;
+        if (m.lineFormat.weight) s.lineFormat.weight = m.lineFormat.weight;
+        if (m.lineFormat.dashStyle) s.lineFormat.dashStyle = m.lineFormat.dashStyle;
+      }
+    });
+    await ctx.sync();
+    if (mt) {
+      const tfs = await textFrames(ctx, others);
+      tfs.forEach(x => {
+        const f = x.tf.textRange.font;
+        if (mt.name) f.name = mt.name; if (mt.size) f.size = mt.size; if (mt.color) f.color = mt.color;
+        if (mt.bold != null) f.bold = mt.bold; if (mt.italic != null) f.italic = mt.italic;
+      });
+      await ctx.sync();
+    }
+  },
+
+  customColour: () => async (ctx) => applyColour(ctx, $("#customCol").value),
+  noFill: () => async (ctx) => { const { items } = await getSel(ctx, 1); items.forEach(s => s.fill.clear()); await ctx.sync(); },
+  noLine: () => async (ctx) => { const { items } = await getSel(ctx, 1); items.forEach(s => { s.lineFormat.visible = false; }); await ctx.sync(); },
+
+  margins: (a) => async (ctx) => {
+    const mg = a === "0" ? 0 : num("#marginCm") * CM;
+    const { items } = await getSel(ctx, 1);
+    const tfs = await textFrames(ctx, items);
+    tfs.forEach(x => { x.tf.leftMargin = mg; x.tf.rightMargin = mg; x.tf.topMargin = mg; x.tf.bottomMargin = mg; });
+    await ctx.sync();
+  },
+
+  fitText: () => async (ctx) => {
+    const { items } = await getSel(ctx, 1);
+    const tfs = await textFrames(ctx, items);
+    tfs.forEach(x => { x.tf.autoSizeSetting = "AutoSizeShapeToFitText"; });
+    await ctx.sync();
+    tfs.forEach(x => x.shape.load("height")); await ctx.sync();
+    tfs.forEach(x => { x.tf.autoSizeSetting = "AutoSizeNone"; });
+    await ctx.sync();
+  },
+
+  wrap: () => async (ctx) => {
+    const { items } = await getSel(ctx, 1);
+    const tfs = await textFrames(ctx, items);
+    if (!tfs.length) throw new UErr("Select a shape with text.");
+    tfs[0].tf.load("wordWrap"); await ctx.sync();
+    const v = !tfs[0].tf.wordWrap;
+    tfs.forEach(x => { x.tf.wordWrap = v; });
+    await ctx.sync();
+    return "Wrap " + (v ? "on." : "off.");
+  },
+
+  bullets: () => async (ctx) => {
+    const ranges = await textTargets(ctx);
+    ranges[0].paragraphFormat.bulletFormat.load("visible"); await ctx.sync();
+    const v = ranges[0].paragraphFormat.bulletFormat.visible !== true;
+    ranges.forEach(r => { r.paragraphFormat.bulletFormat.visible = v; });
+    await ctx.sync();
+    return "Bullets " + (v ? "on." : "off.");
+  },
+
+  indent: (a) => async (ctx) => {
+    const d = parseInt(a, 10);
+    const ranges = await textTargets(ctx);
+    ranges.forEach(r => r.load("text,start"));
+    await ctx.sync();
+    const paras = [];
+    ranges.forEach(r => paragraphSpans(r.text).forEach(([st, len]) => { if (len > 0) paras.push(r.getSubstring(st, len)); }));
+    paras.forEach(p => p.paragraphFormat.load("indentLevel"));
+    await ctx.sync();
+    paras.forEach(p => { const lv = p.paragraphFormat.indentLevel || 1; p.paragraphFormat.indentLevel = Math.max(1, Math.min(9, lv + d)); });
+    await ctx.sync();
+  },
+
+  merge: () => async (ctx) => {
+    const { items } = await getSel(ctx, 2);
+    const tfs = await textFrames(ctx, items);
+    if (tfs.length < 2) throw new UErr("Select at least two text boxes. They merge into the first one you clicked.");
+    tfs.forEach(x => x.tf.textRange.load("text")); await ctx.sync();
+    const target = tfs[0].tf.textRange;
+    const add = tfs.slice(1).map(x => x.tf.textRange.text).filter(t => t).join("\n");
+    const len = target.text.length;
+    if (add) {
+      if (len > 0) target.getSubstring(len - 1, 1).text = target.text[len - 1] + "\n" + add;
+      else target.text = add;
+    }
+    tfs.slice(1).forEach(x => x.shape.delete());
+    await ctx.sync();
+  },
+
+  split: () => async (ctx) => {
+    const { items } = await getSel(ctx, 1);
+    const tfs = await textFrames(ctx, items);
+    tfs.forEach(x => x.tf.textRange.load("text")); await ctx.sync();
+    let made = 0;
+    for (const x of tfs) {
+      const s = x.shape, txt = x.tf.textRange.text;
+      const spans = paragraphSpans(txt).filter(([st, len]) => txt.substr(st, len).trim().length);
+      if (spans.length < 2) continue;
+      const fonts = spans.map(([st, len]) => { const r = x.tf.textRange.getSubstring(st, len); r.font.load("name,size,color,bold"); return r.font; });
+      const slide = s.getParentSlide();
+      await ctx.sync();
+      let top = s.top;
+      for (let i = 0; i < spans.length; i++) {
+        const [st, len] = spans[i];
+        const nb = slide.shapes.addTextBox(txt.substr(st, len), { left: s.left, top: top, width: s.width, height: 20 });
+        const f = fonts[i], nf = nb.textFrame.textRange.font;
+        if (f.name) nf.name = f.name; if (f.size) nf.size = f.size; if (f.color) nf.color = f.color; if (f.bold != null) nf.bold = f.bold;
+        nb.textFrame.autoSizeSetting = "AutoSizeShapeToFitText";
+        nb.load("top,height");
+        await ctx.sync();
+        top = nb.top + nb.height;
+        made++;
+      }
+      s.delete(); await ctx.sync();
+    }
+    if (!made) throw new UErr("Select a text box with two or more paragraphs.");
+    return "Split into " + made + " boxes.";
+  },
+
+  replace: () => async (ctx) => {
+    const f = $("#findTxt").value, r = $("#replTxt").value;
+    if (!f) throw new UErr("Type what to find first.");
+    let shapes;
+    const col = ctx.presentation.getSelectedShapes(); col.load("items/id"); await ctx.sync();
+    if (col.items.length) shapes = col.items;
+    else { const sl = await currentSlide(ctx); sl.shapes.load("items/id"); await ctx.sync(); shapes = sl.shapes.items; }
+    const tfs = await textFrames(ctx, shapes);
+    tfs.forEach(x => x.tf.textRange.load("text")); await ctx.sync();
+    let n = 0;
+    tfs.forEach(x => {
+      const t = x.tf.textRange.text; const hits = [];
+      let i = t.indexOf(f); while (i >= 0) { hits.push(i); i = t.indexOf(f, i + f.length); }
+      hits.reverse().forEach(h => { x.tf.textRange.getSubstring(h, f.length).text = r; n++; });
+    });
+    await ctx.sync();
+    return n + " replacement(s).";
+  },
+
+  hide: () => async (ctx) => {
+    need110();
+    const { items } = await getSel(ctx, 1);
+    items.forEach(s => { s.tags.add(TAG_HIDDEN, "1"); s.visible = false; });
+    await ctx.sync();
+    return "Hid " + items.length + " object(s). Use Unhide on slide to bring them back.";
+  },
+
+  unhide: () => async (ctx) => {
+    need110();
+    const sl = await currentSlide(ctx);
+    sl.shapes.load("items/id"); await ctx.sync();
+    const tags = sl.shapes.items.map(s => { const t = s.tags.getItemOrNullObject(TAG_HIDDEN); t.load("value"); return t; });
+    await ctx.sync();
+    let n = 0;
+    sl.shapes.items.forEach((s, i) => { if (!tags[i].isNullObject) { s.visible = true; s.tags.delete(TAG_HIDDEN); n++; } });
+    await ctx.sync();
+    return n ? "Unhid " + n + " object(s)." : "Nothing on this slide was hidden with Slide Tools.";
+  },
+
+  gotoSlide: () => async (ctx) => {
+    const n = Math.round(num("#gotoNum"));
+    const slides = ctx.presentation.slides; slides.load("items/id"); await ctx.sync();
+    if (n < 1 || n > slides.items.length) throw new UErr("There is no slide " + n + ".");
+    ctx.presentation.setSelectedSlides([slides.items[n - 1].id]);
+    await ctx.sync();
+    return "Slide " + n + ".";
+  },
+
+  check: () => async (ctx) => checkDeck(ctx, false),
+  fixSpaces: () => async (ctx) => checkDeck(ctx, true),
+
+  storyline: () => async (ctx) => {
+    need110();
+    const slides = ctx.presentation.slides; slides.load("items/id"); await ctx.sync();
+    const titles = [];
+    for (const sl of slides.items) titles.push(await slideTitle(ctx, sl));
+    const before = new Set(slides.items.map(s => s.id));
+    const masters = ctx.presentation.slideMasters; masters.load("items/id"); await ctx.sync();
+    const lays = masters.items[0].layouts; lays.load("items/id,items/name"); await ctx.sync();
+    const lay = lays.items.find(l => /title only/i.test(l.name)) || lays.items.find(l => /blank/i.test(l.name)) || lays.items[0];
+    slides.add({ slideMasterId: masters.items[0].id, layoutId: lay.id });
+    await ctx.sync();
+    slides.load("items/id"); await ctx.sync();
+    const ns = slides.items.find(s => !before.has(s.id));
+    const sz = await slideSize(ctx);
+    ns.shapes.load("items/id,items/type"); await ctx.sync();
+    const tf = await textFrames(ctx, ns.shapes.items);
+    if (tf.length) tf[0].tf.textRange.text = "Storyline check";
+    else ns.shapes.addTextBox("Storyline check", { left: sz.w * 0.05, top: sz.h * 0.05, width: sz.w * 0.9, height: 40 }).textFrame.textRange.font.size = 24;
+    const list = titles.map((t, i) => (i + 1) + ".  " + (t || "(no title)")).join("\n");
+    const tb = ns.shapes.addTextBox(list, { left: sz.w * 0.05, top: sz.h * 0.2, width: sz.w * 0.9, height: sz.h * 0.72 });
+    tb.textFrame.textRange.font.size = 12;
+    tb.textFrame.wordWrap = true;
+    tb.textFrame.autoSizeSetting = "AutoSizeTextToFitShape";
+    ctx.presentation.setSelectedSlides([ns.id]);
+    await ctx.sync();
+    return "Storyline slide added at the end.";
+  },
+
+  sticker: () => async (ctx) => {
+    const txt = $("#stickerTxt").value;
+    const sl = await currentSlide(ctx); const sz = await slideSize(ctx);
+    const mg = 0.5 * CM, w = 3 * CM, h = 0.7 * CM;
+    const s = sl.shapes.addGeometricShape("Rectangle", { left: sz.w - mg - w, top: mg, width: w, height: h });
+    s.name = "Sticker " + txt;
+    s.fill.setSolidColor(S.light);
+    s.lineFormat.visible = true; s.lineFormat.color = S.dark; s.lineFormat.weight = 0.75;
+    const tf = s.textFrame;
+    tf.textRange.text = txt;
+    tf.textRange.font.size = 10; tf.textRange.font.bold = true; tf.textRange.font.color = S.dark;
+    tf.textRange.paragraphFormat.horizontalAlignment = "Center";
+    tf.verticalAlignment = "Middle";
+    tf.leftMargin = 0.2 * CM; tf.rightMargin = 0.2 * CM; tf.topMargin = 0.08 * CM; tf.bottomMargin = 0.08 * CM;
+    tf.wordWrap = false;
+    tf.autoSizeSetting = "AutoSizeShapeToFitText";
+    await ctx.sync();
+    s.load("id,width"); await ctx.sync();
+    s.left = sz.w - mg - s.width; s.top = mg;
+    sl.setSelectedShapes([s.id]);
+    await ctx.sync();
+  },
+
+  harvey: (a) => async (ctx) => {
+    const f = parseInt(a, 10) / 100;
+    const sl = await currentSlide(ctx); const sz = await slideSize(ctx);
+    const d = 0.5 * CM, x = (sz.w - d) / 2, y = (sz.h - d) / 2;
+    const base = sl.shapes.addGeometricShape("Ellipse", { left: x, top: y, width: d, height: d });
+    base.fill.setSolidColor(f >= 1 ? S.dark : S.light);
+    base.lineFormat.visible = true; base.lineFormat.color = S.dark; base.lineFormat.weight = 1;
+    base.name = "Harvey " + a + "%";
+    base.load("id");
+    await ctx.sync();
+    if (f <= 0 || f >= 1) { sl.setSelectedShapes([base.id]); await ctx.sync(); return; }
+    need110();
+    const pie = sl.shapes.addGeometricShape("Pie", { left: x, top: y, width: d, height: d });
+    pie.fill.setSolidColor(S.dark); pie.lineFormat.visible = false;
+    await ctx.sync();
+    pie.adjustments.load("count"); await ctx.sync();
+    const a2 = pie.adjustments.get(1); await ctx.sync();
+    const unit = Math.abs(a2.value) > 400 ? 60000 : 1;           // default end angle is 270 degrees
+    pie.adjustments.set(0, 270 * unit);
+    pie.adjustments.set(1, ((270 + 360 * f) % 360) * unit);
+    const ring = sl.shapes.addGeometricShape("Ellipse", { left: x, top: y, width: d, height: d });
+    ring.fill.clear(); ring.lineFormat.visible = true; ring.lineFormat.color = S.dark; ring.lineFormat.weight = 1;
+    await ctx.sync();
+    const g = sl.shapes.addGroup([base, pie, ring]);
+    g.name = "Harvey " + a + "%";
+    await ctx.sync();
+    g.load("id"); await ctx.sync();
+    sl.setSelectedShapes([g.id]); await ctx.sync();
+  },
+
+  saveBrand: () => async () => {
+    const list = $("#brandList").value.split(",").map(x => x.trim()).filter(x => /^#?[0-9a-f]{6}$/i.test(x)).map(x => x[0] === "#" ? x : "#" + x);
+    if (!list.length) throw new UErr("Enter hex colours like #0B2341, #1F5FAD.");
+    try { localStorage.setItem("st_brand", list.slice(0, 10).join(",")); } catch (e) {}
+    renderBrand();
+    return "Brand colours saved.";
+  },
+};
+
+// ---------- shared pieces ----------
+async function distributeImpl(ctx, axis, fixedGap) {
+  const { items } = await getSel(ctx, fixedGap == null ? 3 : 2);
+  const H = axis === "H";
+  const p = (s) => H ? s.left : s.top, e = (s) => H ? s.width : s.height;
+  const set = (s, v) => { if (H) s.left = v; else s.top = v; };
+  const arr = items.slice().sort((a, b) => p(a) - p(b));
+  let gap = fixedGap;
+  if (gap == null) {
+    const total = arr.reduce((t, s) => t + e(s), 0), last = arr[arr.length - 1];
+    gap = (p(last) + e(last) - p(arr[0]) - total) / (arr.length - 1);
+  }
+  let pos = p(arr[0]) + e(arr[0]) + gap;
+  for (let i = 1; i < arr.length; i++) { set(arr[i], pos); pos += e(arr[i]) + gap; }
+  await ctx.sync();
+}
+
+// text ranges to act on: highlighted text, else all text in selected shapes
+async function textTargets(ctx) {
+  need110();
+  const sel = ctx.presentation.getSelectedTextRangeOrNullObject();
+  sel.load("text,length"); await ctx.sync();
+  if (!sel.isNullObject && sel.length > 0) return [sel];
+  const { items } = await getSel(ctx, 1);
+  const tfs = await textFrames(ctx, items);
+  if (!tfs.length) throw new UErr("Select some text or a shape with text.");
+  return tfs.map(x => x.tf.textRange);
+}
+
+function paragraphSpans(t) {
+  const spans = []; const re = /\r\n|\r|\n/g; let st = 0, m;
+  while ((m = re.exec(t)) !== null) { spans.push([st, m.index - st]); st = m.index + m[0].length; }
+  spans.push([st, t.length - st]);
+  return spans;
+}
+
+async function applyColour(ctx, hex) {
+  const sel = ctx.presentation.getSelectedTextRangeOrNullObject();
+  sel.load("length"); await ctx.sync();
+  if (S.target === "text" && !sel.isNullObject && sel.length > 0) { sel.font.color = hex; await ctx.sync(); return "Text colour set."; }
+  const { items } = await getSel(ctx, 1);
+  if (S.target === "fill") items.forEach(s => s.fill.setSolidColor(hex));
+  else if (S.target === "line") items.forEach(s => { s.lineFormat.visible = true; s.lineFormat.color = hex; });
+  else { const tfs = await textFrames(ctx, items); tfs.forEach(x => { x.tf.textRange.font.color = hex; }); }
+  await ctx.sync();
+  return S.target[0].toUpperCase() + S.target.slice(1) + " colour set.";
+}
+
+function swatch(container, hex, title) {
+  const b = document.createElement("button");
+  b.style.background = hex; b.title = title + "  " + hex.toUpperCase();
+  b.addEventListener("click", () => exec(title, (ctx) => applyColour(ctx, hex)));
+  container.appendChild(b);
+}
+
+function renderBrand() {
+  let list = DEFAULT_BRAND;
+  try { list = localStorage.getItem("st_brand") || DEFAULT_BRAND; } catch (e) {}
+  $("#brandList").value = list;
+  const c = $("#brandSw"); c.innerHTML = "";
+  list.split(",").forEach((h, i) => swatch(c, h.trim(), "Brand " + (i + 1)));
+}
+
+async function loadTheme() {
+  const c = $("#themeSw");
+  if (!S.v110) { c.outerHTML = '<div class="note">Needs a newer PowerPoint.</div>'; return; }
+  try {
+    await PowerPoint.run(async (ctx) => {
+      const sl = await currentSlide(ctx);
+      const names = ["Dark1", "Light1", "Dark2", "Light2", "Accent1", "Accent2", "Accent3", "Accent4", "Accent5", "Accent6"];
+      const scheme = sl.themeColorScheme;
+      const res = names.map(n => scheme.getThemeColor(n));
+      await ctx.sync();
+      c.innerHTML = "";
+      res.forEach((r, i) => { const hex = r.value[0] === "#" ? r.value : "#" + r.value; swatch(c, hex, names[i]); });
+      const hx = (v) => (v[0] === "#" ? v : "#" + v);
+      S.dark = hx(res[0].value); S.light = hx(res[1].value);
+    });
+  } catch (e) { c.innerHTML = '<div class="note">Click into a slide, then reopen the pane to load theme colours.</div>'; }
+}
+
+async function slideTitle(ctx, slide) {
+  slide.shapes.load("items/id,items/type"); await ctx.sync();
+  const ph = slide.shapes.items.filter(s => s.type === "Placeholder");
+  ph.forEach(s => s.placeholderFormat.load("type")); await ctx.sync();
+  const t = ph.find(s => s.placeholderFormat.type === "Title" || s.placeholderFormat.type === "CenterTitle");
+  if (!t) return "";
+  const tf = t.getTextFrameOrNullObject(); tf.load("hasText"); await ctx.sync();
+  if (tf.isNullObject) return "";
+  tf.textRange.load("text"); await ctx.sync();
+  return tf.textRange.text.replace(/[\r\n\v]+/g, " ").trim();
+}
+
+async function checkDeck(ctx, fix) {
+  need110();
+  const sz = await slideSize(ctx);
+  const slides = ctx.presentation.slides; slides.load("items/id"); await ctx.sync();
+  const R = { dbl: 0, dblS: new Set(), off: new Set(), empty: 0, emptyS: new Set(), noTitle: new Set(), fonts: new Map() };
+  let fixed = 0;
+  for (let si = 0; si < slides.items.length; si++) {
+    const sl = slides.items[si], n = si + 1;
+    sl.shapes.load("items/id,items/type,items/left,items/top,items/width,items/height"); await ctx.sync();
+    const shapes = sl.shapes.items;
+    shapes.forEach(s => {
+      if (s.left < -1 || s.top < -1 || s.left + s.width > sz.w + 1 || s.top + s.height > sz.h + 1) R.off.add(n);
+    });
+    const ph = shapes.filter(s => s.type === "Placeholder");
+    ph.forEach(s => s.placeholderFormat.load("type"));
+    const tfs = shapes.map(s => s.getTextFrameOrNullObject());
+    tfs.forEach(tf => tf.load("hasText"));
+    await ctx.sync();
+    const live = tfs.map((tf, i) => ({ tf, s: shapes[i] })).filter(x => !x.tf.isNullObject);
+    live.forEach(x => { x.tf.textRange.load("text"); x.tf.textRange.font.load("name"); });
+    await ctx.sync();
+    let hasTitle = false;
+    live.forEach(x => {
+      const isPh = x.s.type === "Placeholder", pt = isPh ? x.s.placeholderFormat.type : "";
+      const txt = x.tf.textRange.text || "";
+      if ((pt === "Title" || pt === "CenterTitle") && txt.trim()) hasTitle = true;
+      if (isPh && !txt.trim() && /Body|Title|CenterTitle|Subtitle|Content|Object/i.test(pt)) { R.empty++; R.emptyS.add(n); }
+      const nm = x.tf.textRange.font.name;
+      if (nm) { if (!R.fonts.has(nm)) R.fonts.set(nm, new Set()); R.fonts.get(nm).add(n); }
+      const runs = txt.match(/ {2,}/g);
+      if (runs) {
+        R.dbl += runs.length; R.dblS.add(n);
+        if (fix) {
+          const hits = []; const re = / {2,}/g; let m;
+          while ((m = re.exec(txt)) !== null) hits.push([m.index, m[0].length]);
+          hits.reverse().forEach(([i, l]) => { x.tf.textRange.getSubstring(i, l).text = " "; fixed++; });
+        }
+      }
+    });
+    if (!hasTitle) R.noTitle.add(n);
+    if (fix) await ctx.sync();
+  }
+  if (fix) return "Fixed " + fixed + " double space(s).";
+  const L = (set) => { const a = [...set]; return a.length ? " (slides " + (a.length > 15 ? a.slice(0, 15).join(", ") + "..." : a.join(", ")) + ")" : ""; };
+  const fonts = [...R.fonts.entries()].sort((a, b) => b[1].size - a[1].size).map(([f, s]) => f + " (" + s.size + " slides)").join(", ");
+  const rep = [
+    "Slides: " + slides.items.length,
+    "Double spaces: " + R.dbl + L(R.dblS),
+    "Objects running off the slide: " + (R.off.size ? "" : "none") + L(R.off),
+    "Empty placeholders: " + R.empty + L(R.emptyS),
+    "Slides without a title: " + (R.noTitle.size ? "" : "none") + L(R.noTitle),
+    "Fonts used: " + (fonts || "n/a") + "  (boxes with mixed fonts not counted)",
+  ].join("\n");
+  const el = $("#report"); el.textContent = rep; el.style.display = "block";
+  return "Deck checked. See the report in the Deck section.";
+}
+</script>
+</body>
+</html>
