@@ -7,230 +7,318 @@
 <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
 <style>
   :root {
-    --ink: #1d2433; --muted: #6b7385; --line: #dde1e8; --bg: #f6f7f9; --card: #fff;
-    --accent: #1f5fad; --accent-soft: #e7eef8; --ok: #2f7d4f; --err: #b3261e;
+    --ink: #1d2433; --muted: #6b7385; --line: #e1e4ea; --bg: #f4f5f7; --card: #fff;
+    --accent: #1f5fad; --accent-soft: #e7eef8; --amber: #e3a21a; --ok: #2f7d4f; --err: #b3261e;
+    --cell: 30px;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink);
-    font: 12px/1.35 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
-  body { padding-bottom: 44px; }
-  header { position: sticky; top: 0; z-index: 5; background: var(--ink); color: #fff; padding: 8px 10px; }
-  header .title { font-weight: 700; letter-spacing: .02em; font-size: 13px; }
-  header .master { margin-top: 4px; display: flex; align-items: center; gap: 6px; font-size: 11px; color: #c9cfdb; }
-  header .master b { color: #fff; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px; display: inline-block; vertical-align: bottom; }
-  header button { background: rgba(255,255,255,.12); color: #fff; border: 1px solid rgba(255,255,255,.25); }
-  header button:hover { background: rgba(255,255,255,.22); }
-  header button.on { background: #e3a21a; border-color: #e3a21a; color: #1d2433; }
-  .warn { background: #fff4d6; color: #6a4a00; padding: 8px 10px; border-bottom: 1px solid #f0d58a; display: none; }
+    font: 11px/1.3 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+  body { padding-bottom: 30px; }
 
-  details { background: var(--card); border-bottom: 1px solid var(--line); }
-  summary { cursor: pointer; padding: 7px 10px; font-weight: 700; font-size: 11px; text-transform: uppercase;
-    letter-spacing: .06em; color: var(--muted); list-style: none; display: flex; justify-content: space-between; }
-  summary::-webkit-details-marker { display: none; }
-  summary::after { content: "\25BE"; font-size: 10px; }
-  details:not([open]) summary::after { content: "\25B8"; }
-  .sec { padding: 0 10px 9px; }
-  .row { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin-bottom: 5px; }
-  .row .lbl { width: 56px; color: var(--muted); font-size: 11px; flex: none; }
-  .grid6 { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; margin-bottom: 5px; }
+  /* header */
+  header { position: sticky; top: 0; z-index: 5; background: var(--ink); color: #fff; padding: 5px 6px;
+    display: flex; align-items: center; gap: 5px; }
+  header .logo { width: 18px; height: 18px; flex: none; }
+  header .master { flex: 1; min-width: 0; font-size: 11px; color: #c9cfdb; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  header .master b { color: #fff; font-weight: 600; }
+  header button { width: 24px; height: 24px; min-height: 0; padding: 0; flex: none; background: rgba(255,255,255,.1);
+    border: 1px solid rgba(255,255,255,.2); color: #fff; border-radius: 4px; display: flex; align-items: center; justify-content: center; }
+  header button:hover { background: rgba(255,255,255,.22); border-color: rgba(255,255,255,.4); }
+  header button.on { background: var(--amber); border-color: var(--amber); color: var(--ink); }
+  header button svg { width: 14px; height: 14px; }
+  .warn { background: #fff4d6; color: #6a4a00; padding: 6px 8px; border-bottom: 1px solid #f0d58a; display: none; }
 
-  button { font: inherit; color: var(--ink); background: #fff; border: 1px solid var(--line); border-radius: 5px;
-    padding: 4px 7px; cursor: pointer; min-height: 26px; }
-  button:hover { border-color: var(--accent); background: var(--accent-soft); }
-  button:active { transform: translateY(1px); }
-  button.ico { padding: 3px; display: flex; align-items: center; justify-content: center; }
-  button.ico svg { width: 18px; height: 18px; }
-  button.arm { background: #fde7e5; border-color: var(--err); color: var(--err); }
-  input[type=text], input[type=number], select { font: inherit; border: 1px solid var(--line); border-radius: 5px; padding: 3px 5px; min-height: 26px; background: #fff; color: var(--ink); }
+  /* sections */
+  section { background: var(--card); border-bottom: 1px solid var(--line); padding: 4px 6px 6px; }
+  section h2 { margin: 0 0 3px; font-size: 9.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted);
+    cursor: pointer; user-select: none; display: flex; justify-content: space-between; }
+  section h2::after { content: "\2212"; font-weight: 400; }
+  section.closed h2::after { content: "+"; }
+  section.closed .icons, section.closed .vals { display: none; }
+  .icons { display: grid; grid-template-columns: repeat(auto-fill, minmax(var(--cell), 1fr)); gap: 2px; }
+  .icons .brk { grid-column: 1 / -1; height: 0; }
+  .vals { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; margin-top: 5px; color: var(--muted); }
+  .vals label { display: inline-flex; align-items: center; gap: 3px; }
+
+  /* icon buttons */
+  button.i { height: var(--cell); min-width: 0; padding: 0; border: 1px solid transparent; border-radius: 4px; background: transparent;
+    color: #3b4458; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  button.i:hover { background: var(--accent-soft); border-color: #c6d6ec; }
+  button.i:active { background: #d6e3f5; }
+  button.i.arm { background: #fde7e5; border-color: var(--err); }
+  button.i.on { background: var(--accent-soft); border-color: var(--accent); }
+  button.i svg { width: 20px; height: 20px; overflow: visible; }
+  svg .o { fill: currentColor; }
+  svg .m { fill: var(--amber); }
+  svg .g { fill: none; stroke: currentColor; stroke-width: 1; stroke-dasharray: 2 1.5; }
+  svg .mo { fill: none; stroke: var(--amber); stroke-width: 1.5; }
+  svg .ln { fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
+  svg .ar { fill: none; stroke: var(--accent); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  svg .rd { fill: none; stroke: var(--err); stroke-width: 1.6; stroke-linecap: round; }
+  svg text { font: 700 8px -apple-system, Helvetica, Arial, sans-serif; fill: currentColor; }
+
+  input[type=text], input[type=number], select { font: inherit; border: 1px solid var(--line); border-radius: 4px; padding: 2px 4px;
+    height: 22px; background: #fff; color: var(--ink); }
   input.n { width: 52px; }
-  input.w { flex: 1; min-width: 60px; }
-  .unit { color: var(--muted); font-size: 11px; }
-
-  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 5px; overflow: hidden; }
-  .seg button { border: 0; border-radius: 0; border-right: 1px solid var(--line); }
-  .seg button:last-child { border-right: 0; }
-  .seg button.on { background: var(--accent); color: #fff; }
-  .sw { display: grid; grid-template-columns: repeat(10, 1fr); gap: 3px; margin-bottom: 5px; }
-  .sw button { padding: 0; min-height: 20px; height: 20px; border-radius: 4px; border: 1px solid rgba(0,0,0,.15); }
+  input.w { width: 100%; }
+  input[type=color] { width: 30px; height: var(--cell); padding: 1px; border: 1px solid var(--line); border-radius: 4px; background: #fff; }
+  .sw { display: grid; grid-template-columns: repeat(10, 1fr); gap: 2px; margin-top: 4px; }
+  .sw button { height: 16px; min-height: 0; padding: 0; border-radius: 3px; border: 1px solid rgba(0,0,0,.15); cursor: pointer; }
   .sw button:hover { outline: 2px solid var(--accent); outline-offset: 1px; }
-  .note { color: var(--muted); font-size: 11px; margin: 2px 0 6px; }
-  #report { white-space: pre-wrap; background: var(--bg); border: 1px solid var(--line); border-radius: 5px; padding: 6px; font-size: 11px; display: none; margin-top: 4px; }
+  .note { color: var(--muted); font-size: 10px; margin: 4px 0 2px; }
+  #report { white-space: pre-wrap; background: var(--bg); border: 1px solid var(--line); border-radius: 4px; padding: 5px; font-size: 10.5px; display: none; margin-top: 5px; }
 
-  #status { position: fixed; bottom: 0; left: 0; right: 0; padding: 8px 10px; background: #fff; border-top: 1px solid var(--line);
-    font-size: 11px; color: var(--muted); min-height: 34px; }
-  #status.ok { color: var(--ok); } #status.err { color: var(--err); }
+  #status { position: fixed; bottom: 0; left: 0; right: 0; padding: 6px 8px; background: #fff; border-top: 1px solid var(--line);
+    font-size: 10.5px; color: var(--muted); min-height: 26px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #status.ok { color: var(--ok); } #status.err { color: var(--err); white-space: normal; }
+
+  /* compact mode: icons only, no headings, no value fields */
+  body.compact { --cell: 28px; }
+  body.compact header .master { display: none; }
+  body.compact header { flex-direction: column; padding: 4px 2px; }
+  body.compact section { padding: 3px 2px; }
+  body.compact section h2, body.compact .vals, body.compact .wide { display: none; }
+  body.compact section.closed .icons { display: grid; }
+  body.compact .icons .brk { display: none; }
+  body.compact #status { display: none; }
+  body.compact { padding-bottom: 0; }
+  body.compact .sw { grid-template-columns: repeat(auto-fill, minmax(12px, 1fr)); }
+  body.compact .sw button { height: 12px; }
 </style>
 </head>
 <body>
 <header>
-  <div class="title">SLIDE TOOLS</div>
-  <div class="master">Master: <b id="masterName">nothing selected</b>
-    <button id="pinBtn" title="Lock the current selection's master so it stays the reference">Pin</button>
-  </div>
+  <svg class="logo" viewBox="0 0 20 20"><rect width="20" height="20" rx="4" fill="#2c3549"/><rect x="5" y="4" width="10" height="3" fill="#fff"/><rect x="5" y="8.5" width="7" height="3" fill="#fff"/><rect x="5" y="13" width="9" height="3" fill="#e3a21a"/><rect x="3" y="3" width="1" height="14" fill="#e3a21a"/></svg>
+  <div class="master">Master: <b id="masterName">nothing selected</b></div>
+  <button id="pinBtn" title="Pin the master: keep this object as the reference while you change the selection"><svg viewBox="0 0 20 20"><path class="ln" d="M7 2h6l-1 6 3 3H5l3-3zM10 11v7"/></svg></button>
+  <button id="compactBtn" title="Compact mode: icons only, so you can drag the panel narrow"><svg viewBox="0 0 20 20"><path class="ln" d="M3 3v14M8 10h9M12 6l-4 4 4 4"/></svg></button>
 </header>
 <div class="warn" id="warn"></div>
 
-<details open><summary>Position</summary><div class="sec">
-  <div class="grid6">
-    <button class="ico" data-cmd="align" data-a="L" title="Align left (to master; one object: to slide)"></button>
-    <button class="ico" data-cmd="align" data-a="C" title="Align centre"></button>
-    <button class="ico" data-cmd="align" data-a="R" title="Align right"></button>
-    <button class="ico" data-cmd="align" data-a="T" title="Align top"></button>
-    <button class="ico" data-cmd="align" data-a="M" title="Align middle"></button>
-    <button class="ico" data-cmd="align" data-a="B" title="Align bottom"></button>
+<section id="secPos"><h2>Position</h2>
+  <div class="icons">
+    <button class="i" data-cmd="align" data-a="L" data-ico="alignL" title="Align left to master (one object: to slide)"></button>
+    <button class="i" data-cmd="align" data-a="C" data-ico="alignC" title="Align centre"></button>
+    <button class="i" data-cmd="align" data-a="R" data-ico="alignR" title="Align right"></button>
+    <button class="i" data-cmd="align" data-a="T" data-ico="alignT" title="Align top"></button>
+    <button class="i" data-cmd="align" data-a="M" data-ico="alignM" title="Align middle"></button>
+    <button class="i" data-cmd="align" data-a="B" data-ico="alignB" title="Align bottom"></button>
+    <button class="i" data-cmd="canon" data-ico="canon" title="Golden canon: inside the master, bottom margin = 2 x top"></button>
+    <span class="brk"></span>
+    <button class="i" data-cmd="distribute" data-a="H" data-ico="distH" title="Distribute horizontally (outer objects stay)"></button>
+    <button class="i" data-cmd="distribute" data-a="V" data-ico="distV" title="Distribute vertically (outer objects stay)"></button>
+    <button class="i" data-cmd="gap" data-a="H" data-ico="gapH" title="Set horizontal gap (value below)"></button>
+    <button class="i" data-cmd="gap" data-a="V" data-ico="gapV" title="Set vertical gap (value below)"></button>
+    <button class="i" data-cmd="stack" data-a="H" data-ico="stackH" title="Stack side by side, in click order"></button>
+    <button class="i" data-cmd="stack" data-a="V" data-ico="stackV" title="Stack vertically, in click order"></button>
+    <button class="i" data-cmd="swap" data-ico="swap" title="Swap two objects (position and layer)"></button>
+    <span class="brk"></span>
+    <button class="i" data-cmd="dock" data-a="L" data-ico="dockL" title="Dock to the master's left side"></button>
+    <button class="i" data-cmd="dock" data-a="R" data-ico="dockR" title="Dock to the master's right side"></button>
+    <button class="i" data-cmd="dock" data-a="T" data-ico="dockT" title="Dock on top of the master"></button>
+    <button class="i" data-cmd="dock" data-a="B" data-ico="dockB" title="Dock below the master"></button>
   </div>
-  <div class="row"><span class="lbl">Distribute</span>
-    <button data-cmd="distribute" data-a="H" title="Equal horizontal gaps, outer objects fixed">Horizontal</button>
-    <button data-cmd="distribute" data-a="V" title="Equal vertical gaps, outer objects fixed">Vertical</button>
-  </div>
-  <div class="row"><span class="lbl">Gap</span>
-    <input class="n" id="gapCm" type="number" step="0.05" value="0.25"><span class="unit">cm</span>
-    <button data-cmd="gap" data-a="H">Horizontal</button><button data-cmd="gap" data-a="V">Vertical</button>
-  </div>
-  <div class="row"><span class="lbl">Stack</span>
-    <button data-cmd="stack" data-a="H" title="Side by side, in selection order">Side by side</button>
-    <button data-cmd="stack" data-a="V" title="On top of each other, in selection order">Vertical</button>
-    <button data-cmd="swap" title="Swap two objects (position and layer)">Swap</button>
-  </div>
-  <div class="row"><span class="lbl">Dock</span>
-    <button data-cmd="dock" data-a="L" title="Move to the master's left side">Left of</button>
-    <button data-cmd="dock" data-a="R" title="Move to the master's right side">Right of</button>
-    <button data-cmd="dock" data-a="T" title="Move onto the master's top">Above</button>
-    <button data-cmd="dock" data-a="B" title="Move below the master">Below</button>
-  </div>
-  <div class="row"><span class="lbl"></span>
-    <button data-cmd="canon" title="Vertical position inside the master, bottom margin = 2 x top">Golden canon</button>
-  </div>
-</div></details>
+  <div class="vals"><label>Gap <input class="n" id="gapCm" type="number" step="0.05" value="0.25"> cm</label></div>
+</section>
 
-<details open><summary>Size</summary><div class="sec">
-  <div class="row"><span class="lbl">Match</span>
-    <button data-cmd="same" data-a="W">Width</button><button data-cmd="same" data-a="H">Height</button><button data-cmd="same" data-a="B">Both</button>
-    <button data-cmd="fillgap" title="Grow each object until it touches the master">Fill gap</button>
+<section id="secSize"><h2>Size</h2>
+  <div class="icons">
+    <button class="i" data-cmd="same" data-a="W" data-ico="sameW" title="Same width as master"></button>
+    <button class="i" data-cmd="same" data-a="H" data-ico="sameH" title="Same height as master"></button>
+    <button class="i" data-cmd="same" data-a="B" data-ico="sameB" title="Same size as master"></button>
+    <button class="i" data-cmd="fillgap" data-ico="fillgap" title="Fill the gap to the master"></button>
+    <button class="i" data-cmd="resize" data-ico="resize" title="Resize selection by % (value below)"></button>
+    <span class="brk"></span>
+    <button class="i" data-cmd="stretch" data-a="L" data-ico="stretchL" title="Stretch left edge to master's left"></button>
+    <button class="i" data-cmd="stretch" data-a="R" data-ico="stretchR" title="Stretch right edge to master's right"></button>
+    <button class="i" data-cmd="stretch" data-a="T" data-ico="stretchT" title="Stretch top edge to master's top"></button>
+    <button class="i" data-cmd="stretch" data-a="B" data-ico="stretchB" title="Stretch bottom edge to master's bottom"></button>
+    <span class="brk"></span>
+    <button class="i" data-cmd="copyPos" data-ico="copyPos" title="Copy master's position and size"></button>
+    <button class="i" data-cmd="pastePos" data-a="all" data-ico="pasteAll" title="Paste position and size"></button>
+    <button class="i" data-cmd="pastePos" data-a="pos" data-ico="pastePos" title="Paste position only"></button>
+    <button class="i" data-cmd="pastePos" data-a="size" data-ico="pasteSize" title="Paste size only"></button>
+    <button class="i" data-cmd="dimsApply" data-ico="dims" title="Apply the dimensions below (cm)"></button>
   </div>
-  <div class="row"><span class="lbl">Stretch</span>
-    <button data-cmd="stretch" data-a="L">Left</button><button data-cmd="stretch" data-a="R">Right</button>
-    <button data-cmd="stretch" data-a="T">Top</button><button data-cmd="stretch" data-a="B">Bottom</button>
+  <div class="vals">
+    <label>Resize <input class="n" id="resizePct" type="number" value="80"> %</label>
+    <label><input type="checkbox" id="resizeText" checked> fonts &amp; lines</label>
   </div>
-  <div class="row"><span class="lbl">Resize</span>
-    <input class="n" id="resizePct" type="number" value="80"><span class="unit">%</span>
-    <label class="unit"><input type="checkbox" id="resizeText" checked> fonts &amp; lines</label>
-    <button data-cmd="resize">Apply</button>
+  <div class="vals">
+    <label>L <input class="n" id="dL"></label><label>T <input class="n" id="dT"></label>
+    <label>W <input class="n" id="dW"></label><label>H <input class="n" id="dH"></label> cm
   </div>
-  <div class="row"><span class="lbl">Dimensions</span>
-    <input class="n" id="dL" placeholder="Left"><input class="n" id="dT" placeholder="Top">
-    <input class="n" id="dW" placeholder="Width"><input class="n" id="dH" placeholder="Height">
-  </div>
-  <div class="row"><span class="lbl"></span><span class="unit">cm, blank = keep</span>
-    <button data-cmd="dimsApply">Apply</button>
-  </div>
-  <div class="row"><span class="lbl">Position</span>
-    <button data-cmd="copyPos" title="Remember the master's position and size">Copy</button>
-    <button data-cmd="pastePos" data-a="all">Paste</button>
-    <button data-cmd="pastePos" data-a="pos">Pos only</button>
-    <button data-cmd="pastePos" data-a="size">Size only</button>
-  </div>
-</div></details>
+</section>
 
-<details><summary>Shape</summary><div class="sec">
-  <div class="row"><span class="lbl">Arrows</span>
-    <button data-cmd="chain" title="Chevrons in a chain: master's size and angle, left to right">Process chain</button>
-    <button data-cmd="angles" title="Same visible angle as the master, whatever the size">Match angles</button>
+<section id="secShape"><h2>Shape</h2>
+  <div class="icons">
+    <button class="i" data-cmd="chain" data-ico="chain" title="Process chain: master's size and angle, left to right"></button>
+    <button class="i" data-cmd="angles" data-ico="angles" title="Match arrow angles to master"></button>
+    <button class="i" data-cmd="radiusMatch" data-ico="radiusMatch" title="Match corner radius to master"></button>
+    <button class="i" data-cmd="radiusSet" data-ico="radiusSet" title="Set corner radius (value below)"></button>
+    <button class="i" data-cmd="copyStyle" data-ico="copyStyle" title="Copy style (fill, line, font) from master"></button>
+    <span class="brk"></span>
+    <button class="i" data-cmd="similar" data-a="TC" data-ico="simTC" title="Select similar: same type and fill colour"></button>
+    <button class="i" data-cmd="similar" data-a="T" data-ico="simT" title="Select similar: same type"></button>
+    <button class="i" data-cmd="similar" data-a="S" data-ico="simS" title="Select similar: same size"></button>
   </div>
-  <div class="row"><span class="lbl">Corners</span>
-    <button data-cmd="radiusMatch" title="Same corner radius as the master">Match</button>
-    <input class="n" id="radiusCm" type="number" step="0.05" value="0.2"><span class="unit">cm</span>
-    <button data-cmd="radiusSet">Set</button>
-  </div>
-  <div class="row"><span class="lbl">Select</span>
-    <button data-cmd="similar" data-a="TC" title="Same type and fill colour">Type+colour</button>
-    <button data-cmd="similar" data-a="T">Type</button>
-    <button data-cmd="similar" data-a="S">Size</button>
-  </div>
-  <div class="row"><span class="lbl">Style</span>
-    <button data-cmd="copyStyle" title="Copy fill, line and font from the master to the others">Copy style from master</button>
-  </div>
-</div></details>
+  <div class="vals"><label>Radius <input class="n" id="radiusCm" type="number" step="0.05" value="0.2"> cm</label></div>
+</section>
 
-<details open><summary>Colour</summary><div class="sec">
-  <div class="row"><span class="lbl">Apply to</span>
-    <span class="seg" id="target"><button data-t="fill" class="on">Fill</button><button data-t="line">Line</button><button data-t="text">Text</button></span>
+<section id="secColour"><h2>Colour</h2>
+  <div class="icons" id="target">
+    <button class="i on" data-t="fill" data-ico="tFill" title="Colours apply to fill"></button>
+    <button class="i" data-t="line" data-ico="tLine" title="Colours apply to line"></button>
+    <button class="i" data-t="text" data-ico="tText" title="Colours apply to text"></button>
+    <button class="i" data-cmd="noFill" data-ico="noFill" title="No fill"></button>
+    <button class="i" data-cmd="noLine" data-ico="noLine" title="No line"></button>
+    <input type="color" id="customCol" value="#1f5fad" title="Pick any colour: it is applied when you close the picker">
   </div>
-  <div class="note">Theme (this deck)</div>
-  <div class="sw" id="themeSw"></div>
-  <div class="note">Brand</div>
-  <div class="sw" id="brandSw"></div>
-  <div class="row">
-    <input type="color" id="customCol" value="#1f5fad"><button data-cmd="customColour">Apply custom</button>
-    <button data-cmd="noFill">No fill</button><button data-cmd="noLine">No line</button>
-  </div>
-</div></details>
+  <div class="sw" id="themeSw" title="Theme colours of this deck"></div>
+  <div class="sw" id="brandSw" title="Brand colours (edit in Settings)"></div>
+</section>
 
-<details><summary>Text</summary><div class="sec">
-  <div class="row"><span class="lbl">Margins</span>
-    <button data-cmd="margins" data-a="0">Zero</button>
-    <input class="n" id="marginCm" type="number" step="0.05" value="0.1"><span class="unit">cm</span>
-    <button data-cmd="margins">Set</button>
+<section id="secText" class="closed"><h2>Text</h2>
+  <div class="icons">
+    <button class="i" data-cmd="margins" data-a="0" data-ico="margin0" title="Zero text margins"></button>
+    <button class="i" data-cmd="margins" data-ico="marginSet" title="Set text margins (value below)"></button>
+    <button class="i" data-cmd="fitText" data-ico="fitText" title="Fit shape to text"></button>
+    <button class="i" data-cmd="wrap" data-ico="wrap" title="Word wrap on/off"></button>
+    <button class="i" data-cmd="bullets" data-ico="bullets" title="Bullets on/off"></button>
+    <button class="i" data-cmd="indent" data-a="1" data-ico="indent" title="Indent one level"></button>
+    <button class="i" data-cmd="indent" data-a="-1" data-ico="outdent" title="Outdent one level"></button>
+    <span class="brk"></span>
+    <button class="i" data-cmd="merge" data-ico="merge" title="Merge text boxes into the first clicked"></button>
+    <button class="i" data-cmd="split" data-ico="split" title="Split into one box per paragraph"></button>
+    <button class="i" data-cmd="replace" data-ico="replace" title="Find and replace (fields below)"></button>
   </div>
-  <div class="row"><span class="lbl">Box</span>
-    <button data-cmd="fitText">Fit to text</button><button data-cmd="wrap">Wrap on/off</button>
-  </div>
-  <div class="row"><span class="lbl">Bullets</span>
-    <button data-cmd="bullets">On/off</button>
-    <button data-cmd="indent" data-a="1" title="Indent one level">Indent &rarr;</button>
-    <button data-cmd="indent" data-a="-1" title="Outdent one level">&larr; Outdent</button>
-  </div>
-  <div class="row"><span class="lbl">Boxes</span>
-    <button data-cmd="merge" title="Merge into the first-selected box, in selection order">Merge</button>
-    <button data-cmd="split" title="One box per paragraph">Split paragraphs</button>
-  </div>
-  <div class="row"><span class="lbl">Find</span><input type="text" class="w" id="findTxt"></div>
-  <div class="row"><span class="lbl">Replace</span><input type="text" class="w" id="replTxt">
-    <button data-cmd="replace" title="In the selected objects, or the whole current slide if nothing is selected">Go</button>
-  </div>
-</div></details>
+  <div class="vals"><label>Margin <input class="n" id="marginCm" type="number" step="0.05" value="0.1"> cm</label></div>
+  <div class="vals"><input type="text" class="w" id="findTxt" placeholder="Find"><input type="text" class="w" id="replTxt" placeholder="Replace with"></div>
+</section>
 
-<details><summary>View</summary><div class="sec">
-  <div class="row">
-    <button data-cmd="hide">Hide selected</button><button data-cmd="unhide">Unhide on slide</button>
+<section id="secView" class="closed"><h2>View &amp; deck</h2>
+  <div class="icons">
+    <button class="i" data-cmd="hide" data-ico="hide" title="Hide selected objects"></button>
+    <button class="i" data-cmd="unhide" data-ico="unhide" title="Unhide objects on this slide"></button>
+    <button class="i" data-cmd="gotoSlide" data-ico="goto" title="Go to slide number (value below)"></button>
+    <button class="i" data-cmd="check" data-ico="check" title="Check deck"></button>
+    <button class="i confirm" data-cmd="fixSpaces" data-ico="spaces" title="Fix double spaces in the whole deck"></button>
+    <button class="i" data-cmd="storyline" data-ico="storyline" title="Add a storyline slide (all titles)"></button>
   </div>
-  <div class="row"><span class="lbl">Go to</span>
-    <input class="n" id="gotoNum" type="number" min="1"><button data-cmd="gotoSlide">Go</button>
-  </div>
-</div></details>
+  <div class="vals"><label>Slide <input class="n" id="gotoNum" type="number" min="1"></label></div>
+  <div id="report" class="wide"></div>
+</section>
 
-<details><summary>Deck</summary><div class="sec">
-  <div class="row">
-    <button data-cmd="check">Check deck</button>
-    <button data-cmd="fixSpaces" class="confirm">Fix double spaces</button>
-    <button data-cmd="storyline" title="New slide listing every slide title">Storyline slide</button>
+<section id="secInsert" class="closed"><h2>Insert</h2>
+  <div class="icons">
+    <button class="i" data-cmd="sticker" data-ico="sticker" title="Insert sticker (choose text below)"></button>
+    <button class="i" data-cmd="harvey" data-a="0" data-ico="hb0" title="Harvey ball 0%"></button>
+    <button class="i" data-cmd="harvey" data-a="25" data-ico="hb25" title="Harvey ball 25%"></button>
+    <button class="i" data-cmd="harvey" data-a="50" data-ico="hb50" title="Harvey ball 50%"></button>
+    <button class="i" data-cmd="harvey" data-a="75" data-ico="hb75" title="Harvey ball 75%"></button>
+    <button class="i" data-cmd="harvey" data-a="100" data-ico="hb100" title="Harvey ball 100%"></button>
   </div>
-  <div id="report"></div>
-</div></details>
-
-<details><summary>Insert</summary><div class="sec">
-  <div class="row"><span class="lbl">Sticker</span>
+  <div class="vals">
     <select id="stickerTxt">
       <option>Draft</option><option>Preliminary</option><option>For discussion</option>
       <option>Illustrative</option><option>Indicative</option><option>Confidential</option><option>Backup</option>
     </select>
-    <button data-cmd="sticker">Insert</button>
   </div>
-  <div class="row"><span class="lbl">Harvey</span>
-    <button data-cmd="harvey" data-a="0">0</button><button data-cmd="harvey" data-a="25">25</button>
-    <button data-cmd="harvey" data-a="50">50</button><button data-cmd="harvey" data-a="75">75</button>
-    <button data-cmd="harvey" data-a="100">100</button>
+</section>
+
+<section id="secSettings" class="closed wide"><h2>Settings</h2>
+  <div class="vals" style="display:block">
+    <div class="note">Brand colours, hex, comma-separated (up to 10)</div>
+    <div style="display:flex;gap:4px"><input type="text" class="w" id="brandList"><button class="i" data-cmd="saveBrand" data-ico="save" title="Save brand colours" style="width:30px;flex:none"></button></div>
+    <div class="note">Master = the object you click last. Hover any icon to see what it does. Compact mode hides labels and fields so you can drag the panel narrow; the last values you typed are still used.</div>
   </div>
-</div></details>
+</section>
 
-<details><summary>Settings</summary><div class="sec">
-  <div class="note">Brand colours, hex, comma-separated (up to 10)</div>
-  <div class="row"><input type="text" class="w" id="brandList"><button data-cmd="saveBrand">Save</button></div>
-  <div class="note">The master is the object you clicked last. Pin it to keep it as the reference while you add or remove other objects.</div>
-</div></details>
+<div id="status">Ready. Hover an icon to see what it does.</div>
 
-<div id="status">Ready.</div>
-
+<script>
+"use strict";
+// ---------- icon set (20x20; grey = objects, amber = master, blue = movement) ----------
+const r = (x, y, w, h, c = "o", rx = 1) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${rx}" class="${c}"/>`;
+const p = (d, c = "ln") => `<path d="${d}" class="${c}"/>`;
+const t = (x, y, s, size = 8) => `<text x="${x}" y="${y}" style="font-size:${size}px">${s}</text>`;
+const hb = (f) => {
+  if (f === 0) return `<circle cx="10" cy="10" r="7" class="ln"/>`;
+  if (f === 1) return `<circle cx="10" cy="10" r="7" class="o"/><circle cx="10" cy="10" r="7" class="ln"/>`;
+  const a = 2 * Math.PI * f, x = 10 + 7 * Math.sin(a), y = 10 - 7 * Math.cos(a);
+  return `<path d="M10 10V3A7 7 0 ${f > 0.5 ? 1 : 0} 1 ${x.toFixed(2)} ${y.toFixed(2)}Z" class="o"/><circle cx="10" cy="10" r="7" class="ln"/>`;
+};
+const ICONS = {
+  alignL: p("M2.5 1v18") + r(5, 4, 12, 4) + r(5, 12, 7, 4, "m"),
+  alignC: p("M10 1v18") + r(3, 4, 14, 4) + r(6, 12, 8, 4, "m"),
+  alignR: p("M17.5 1v18") + r(3, 4, 12, 4) + r(8, 12, 7, 4, "m"),
+  alignT: p("M1 2.5h18") + r(4, 5, 4, 12) + r(12, 5, 4, 7, "m"),
+  alignM: p("M1 10h18") + r(4, 3, 4, 14) + r(12, 6, 4, 8, "m"),
+  alignB: p("M1 17.5h18") + r(4, 3, 4, 12) + r(12, 8, 4, 7, "m"),
+  canon: r(2, 2, 16, 16, "mo") + r(5, 5.5, 10, 5),
+  distH: r(1, 5, 3, 10) + r(8.5, 5, 3, 10) + r(16, 5, 3, 10) + p("M4.5 18h3.5M12 18h3.5", "ar"),
+  distV: r(5, 1, 10, 3) + r(5, 8.5, 10, 3) + r(5, 16, 10, 3) + p("M18 4.5v3.5M18 12v3.5", "ar"),
+  gapH: r(1.5, 4, 6, 12) + r(12.5, 4, 6, 12) + p("M8.5 10h3M8.5 7v6M11.5 7v6", "ar"),
+  gapV: r(4, 1.5, 12, 6) + r(4, 12.5, 12, 6) + p("M10 8.5v3M7 8.5h6M7 11.5h6", "ar"),
+  stackH: r(1, 6, 5.5, 8) + r(7, 6, 5.5, 8, "g") + r(13, 6, 6, 8) + p("M6.5 3v14", "ar"),
+  stackV: r(6, 1, 8, 5.5) + r(6, 7, 8, 5.5, "g") + r(6, 13, 8, 6) + p("M3 6.5h14", "ar"),
+  swap: r(1.5, 2, 6, 6) + r(12.5, 12, 6, 6, "m") + p("M9 5h7.5l-2-2M11 15H3.5l2 2", "ar"),
+  dockL: r(11, 3, 7, 14, "m") + r(5, 7, 6, 6) + p("M1 10h2.5M2 8.5 3.5 10 2 11.5", "ar"),
+  dockR: r(2, 3, 7, 14, "m") + r(9, 7, 6, 6) + p("M19 10h-2.5M18 8.5 16.5 10 18 11.5", "ar"),
+  dockT: r(3, 11, 14, 7, "m") + r(7, 5, 6, 6) + p("M10 1v2.5M8.5 2 10 3.5 11.5 2", "ar"),
+  dockB: r(3, 2, 14, 7, "m") + r(7, 9, 6, 6) + p("M10 19v-2.5M8.5 18 10 16.5 11.5 18", "ar"),
+  sameW: r(3, 2, 14, 5, "m") + r(3, 10, 14, 5) + p("M3 18h14M3 16.5v3M17 16.5v3", "ar"),
+  sameH: r(2, 3, 5, 14, "m") + r(10, 3, 5, 14) + p("M18 3v14M16.5 3h3M16.5 17h3", "ar"),
+  sameB: r(1.5, 1.5, 8, 8, "m") + r(10.5, 10.5, 8, 8) + p("M10.5 6h3l-1.5-1.5M13.5 6v3", "ar"),
+  fillgap: r(14, 2, 4.5, 16, "m") + r(1.5, 6, 5, 8) + r(6.5, 6, 7.5, 8, "g") + p("M7 10h5.5M11 8.5l1.5 1.5-1.5 1.5", "ar"),
+  resize: r(1.5, 10, 8, 8) + r(1.5, 2, 16.5, 16, "g") + p("M11 9l6-6M13.5 3H17v3.5", "ar"),
+  stretchL: r(2, 2, 16, 5, "m") + r(10, 11, 8, 6) + r(2, 11, 8, 6, "g") + p("M9 14H3.5M5 12.5 3.5 14 5 15.5", "ar"),
+  stretchR: r(2, 2, 16, 5, "m") + r(2, 11, 8, 6) + r(10, 11, 8, 6, "g") + p("M11 14h5.5M15 12.5l1.5 1.5-1.5 1.5", "ar"),
+  stretchT: r(2, 2, 5, 16, "m") + r(11, 10, 6, 8) + r(11, 2, 6, 8, "g") + p("M14 9V3.5M12.5 5 14 3.5 15.5 5", "ar"),
+  stretchB: r(2, 2, 5, 16, "m") + r(11, 2, 6, 8) + r(11, 10, 6, 8, "g") + p("M14 11v5.5M12.5 15l1.5 1.5 1.5-1.5", "ar"),
+  copyPos: r(2, 2, 10, 10, "m") + r(8, 8, 10, 10, "g") + t(9.5, 16.5, "C", 7),
+  pasteAll: r(2, 2, 8, 8, "g") + r(9, 9, 9, 9) + p("M5 12v3h3", "ar"),
+  pastePos: p("M10 1.5v17M1.5 10h17") + r(6, 6, 8, 8, "g") + `<circle cx="10" cy="10" r="1.6" class="m"/>`,
+  pasteSize: p("M2 7V2h5M13 2h5v5M18 13v5h-5M7 18H2v-5") + r(6, 6, 8, 8, "g"),
+  dims: p("M1.5 6.5h17v7h-17zM5 6.5v3M8.5 6.5v2M12 6.5v3M15.5 6.5v2"),
+  chain: p("M1 5h4.5l3 5-3 5H1z", "o") + p("M7 5h4.5l3 5-3 5H7l3-5z", "o") + `<path d="M13 5h3l3 5-3 5h-3l3-5z" class="m"/>`,
+  angles: p("M1.5 6h4.5l3 4-3 4H1.5l3-4z", "o") + `<path d="M9.5 3h4.5l4.5 7-4.5 7H9.5l4.5-7z" class="m"/>`,
+  radiusMatch: `<rect x="1.5" y="1.5" width="9" height="9" rx="3" class="m"/><rect x="7" y="7" width="11.5" height="11.5" rx="3" class="o"/>`,
+  radiusSet: p("M3 18V10a7 7 0 0 1 7-7h8") + p("M3.5 3.5l4 4M3.5 7.5v-4h4", "ar"),
+  copyStyle: r(2, 2, 13, 5.5, "m") + p("M15 4.75h2.5v5H9.5v2.5") + r(8, 12, 3, 6.5),
+  simTC: r(2, 2, 6.5, 6.5, "m") + r(11.5, 2, 6.5, 6.5, "m") + r(2, 11.5, 6.5, 6.5, "m") + r(11.5, 11.5, 6.5, 6.5, "g"),
+  simT: `<circle cx="5.5" cy="5.5" r="3.8" class="m"/><circle cx="14.5" cy="5.5" r="3.8" class="m"/><circle cx="5.5" cy="14.5" r="3.8" class="m"/>` + r(11, 11, 7, 7, "g"),
+  simS: r(1.5, 1.5, 7, 5, "m") + r(11.5, 4, 7, 5, "m") + r(4, 12.5, 7, 5, "m") + r(14, 13, 4, 3, "g"),
+  tFill: r(3, 3, 14, 14, "o", 2),
+  tLine: `<rect x="3.5" y="3.5" width="13" height="13" rx="2" style="fill:none;stroke:currentColor;stroke-width:2.5"/>`,
+  tText: t(5, 15, "A", 14) + p("M3.5 18h13"),
+  noFill: r(3, 3, 14, 14, "g", 2) + p("M3 17L17 3", "rd"),
+  noLine: r(3, 3, 14, 14, "o", 2) + p("M1.5 18.5L18.5 1.5", "rd"),
+  margin0: p("M2 2h16v16H2z") + r(2, 5, 16, 2.2) + r(2, 9, 16, 2.2) + r(2, 13, 11, 2.2),
+  marginSet: p("M2 2h16v16H2z") + r(5, 5.5, 10, 2) + r(5, 9, 10, 2) + r(5, 12.5, 7, 2) + `<rect x="4" y="4" width="12" height="12" class="g" rx="0"/>`,
+  fitText: r(1.5, 1.5, 17, 17, "g", 1) + r(5, 7, 10, 2) + r(5, 11, 7, 2) + p("M1.5 4.5 4 7M18.5 15.5 16 13", "ar"),
+  wrap: p("M2 4h16M2 9h12a3.5 3.5 0 0 1 0 7h-4M2 16h4") + p("M12 14l-2 2 2 2", "ar"),
+  bullets: `<circle cx="3.5" cy="5" r="1.6" class="o"/><circle cx="3.5" cy="10" r="1.6" class="o"/><circle cx="3.5" cy="15" r="1.6" class="o"/>` + p("M7.5 5h11M7.5 10h11M7.5 15h11"),
+  indent: p("M2 3h16M8 8h10M8 12h10M2 17h16") + p("M2 7.5l3 2.5-3 2.5", "ar"),
+  outdent: p("M2 3h16M8 8h10M8 12h10M2 17h16") + p("M5 7.5L2 10l3 2.5", "ar"),
+  merge: r(1.5, 2, 6.5, 6.5) + r(1.5, 11.5, 6.5, 6.5) + p("M9 10h3.5M11 8.5l1.5 1.5-1.5 1.5", "ar") + r(14, 3, 4.5, 14, "m"),
+  split: r(1.5, 3, 4.5, 14, "m") + p("M7 10h3.5M9 8.5l1.5 1.5L9 11.5", "ar") + r(12, 2, 6.5, 6.5) + r(12, 11.5, 6.5, 6.5),
+  replace: t(1, 9, "A", 9) + t(11, 18, "B", 9) + p("M8 5h6a3 3 0 0 1 3 3v1.5M15.5 8l1.5 1.5L18.5 8", "ar"),
+  hide: p("M2 10s3-5.5 8-5.5S18 10 18 10s-3 5.5-8 5.5S2 10 2 10z") + `<circle cx="10" cy="10" r="2.3" class="o"/>` + p("M3 17L17 3", "rd"),
+  unhide: p("M2 10s3-5.5 8-5.5S18 10 18 10s-3 5.5-8 5.5S2 10 2 10z") + `<circle cx="10" cy="10" r="2.3" class="o"/>`,
+  goto: p("M2 4h11v12H2z") + p("M9 10h9M15 7l3 3-3 3", "ar"),
+  check: p("M2 2h16v16H2z") + p("M5.5 10.5l3 3 6-7", "ar"),
+  spaces: t(1, 11, "a", 9) + t(14, 11, "b", 9) + p("M7 13v2h6v-2", "rd") + p("M8 18h4", "ar"),
+  storyline: r(2, 2.5, 2.5, 2.5, "m") + p("M7 3.75h11") + r(2, 8.75, 2.5, 2.5, "m") + p("M7 10h11") + r(2, 15, 2.5, 2.5, "m") + p("M7 16.25h8"),
+  sticker: p("M1.5 3.5h17v14h-17z") + r(10.5, 5, 6.5, 3.5, "m", 0.5),
+  hb0: hb(0), hb25: hb(0.25), hb50: hb(0.5), hb75: hb(0.75), hb100: hb(1),
+  save: p("M3 3h11l3 3v11H3zM6 3v5h7V3M6 17v-5h8v5"),
+};
+document.querySelectorAll("[data-ico]").forEach(el => {
+  el.innerHTML = '<svg viewBox="0 0 20 20">' + (ICONS[el.dataset.ico] || "") + "</svg>";
+});
+</script>
 <script>
 "use strict";
 const CM = 28.3464567;
@@ -243,19 +331,6 @@ const $ = (q) => document.querySelector(q);
 const num = (id) => { const v = parseFloat(String($(id).value).replace(",", ".")); if (isNaN(v)) throw new UErr("Enter a number first."); return v; };
 
 function status(msg, kind) { const el = $("#status"); el.textContent = msg; el.className = kind || ""; }
-
-// ---------- icons ----------
-const ICON = {
-  L: '<path d="M2 1v16" stroke="currentColor" stroke-width="1.6"/><rect x="4" y="3" width="10" height="4" rx="1" fill="currentColor"/><rect x="4" y="10" width="6" height="4" rx="1" fill="currentColor"/>',
-  C: '<path d="M9 1v16" stroke="currentColor" stroke-width="1.6"/><rect x="3" y="3" width="12" height="4" rx="1" fill="currentColor" opacity=".85"/><rect x="5" y="10" width="8" height="4" rx="1" fill="currentColor" opacity=".85"/>',
-  R: '<path d="M16 1v16" stroke="currentColor" stroke-width="1.6"/><rect x="4" y="3" width="10" height="4" rx="1" fill="currentColor"/><rect x="8" y="10" width="6" height="4" rx="1" fill="currentColor"/>',
-  T: '<path d="M1 2h16" stroke="currentColor" stroke-width="1.6"/><rect x="3" y="4" width="4" height="10" rx="1" fill="currentColor"/><rect x="10" y="4" width="4" height="6" rx="1" fill="currentColor"/>',
-  M: '<path d="M1 9h16" stroke="currentColor" stroke-width="1.6"/><rect x="3" y="3" width="4" height="12" rx="1" fill="currentColor" opacity=".85"/><rect x="10" y="5" width="4" height="8" rx="1" fill="currentColor" opacity=".85"/>',
-  B: '<path d="M1 16h16" stroke="currentColor" stroke-width="1.6"/><rect x="3" y="4" width="4" height="10" rx="1" fill="currentColor"/><rect x="10" y="8" width="4" height="6" rx="1" fill="currentColor"/>',
-};
-document.querySelectorAll('button.ico[data-cmd="align"]').forEach(b => {
-  b.innerHTML = '<svg viewBox="0 0 18 18" fill="none">' + ICON[b.dataset.a] + "</svg>";
-});
 
 // ---------- startup ----------
 Office.onReady((info) => {
@@ -284,32 +359,59 @@ function wire() {
     const fn = CMD[b.dataset.cmd];
     if (!fn) return;
     if (b.classList.contains("confirm") && !b.classList.contains("arm")) {
-      b.classList.add("arm"); const old = b.textContent; b.textContent = "Click again to confirm";
-      setTimeout(() => { b.classList.remove("arm"); b.textContent = old; }, 3000);
+      b.classList.add("arm"); status("Click again to confirm: " + b.title, "err");
+      setTimeout(() => b.classList.remove("arm"), 3000);
       return;
     }
-    if (b.classList.contains("arm")) { b.classList.remove("arm"); }
-    exec(b.textContent.trim() || b.title, (ctx) => fn(b.dataset.a)(ctx));
+    b.classList.remove("arm");
+    exec(b.title, (ctx) => fn(b.dataset.a)(ctx));
   }));
-  $("#target").addEventListener("click", (e) => {
-    const t = e.target.closest("button"); if (!t) return;
-    S.target = t.dataset.t;
-    document.querySelectorAll("#target button").forEach(x => x.classList.toggle("on", x === t));
+  // hover help in the status bar (tooltips can be slow inside PowerPoint)
+  document.querySelectorAll("[title]").forEach(el => {
+    el.addEventListener("mouseenter", () => { if (!busy) status(el.title); });
   });
+  document.querySelectorAll("#target button[data-t]").forEach(t => t.addEventListener("click", () => {
+    S.target = t.dataset.t;
+    document.querySelectorAll("#target button[data-t]").forEach(x => x.classList.toggle("on", x === t));
+    status("Colours now apply to " + S.target + ".");
+  }));
+  $("#customCol").addEventListener("change", () => exec("Custom colour", (ctx) => applyColour(ctx, $("#customCol").value)));
   $("#pinBtn").addEventListener("click", () => exec("Pin", pinToggle));
+  // collapsible sections, remembered
+  let closed = null;
+  try { closed = JSON.parse(localStorage.getItem("st_closed") || "null"); } catch (e) {}
+  document.querySelectorAll("section").forEach(sec => {
+    if (closed) sec.classList.toggle("closed", closed.includes(sec.id));
+    sec.querySelector("h2").addEventListener("click", () => {
+      sec.classList.toggle("closed");
+      const ids = [...document.querySelectorAll("section.closed")].map(x => x.id);
+      try { localStorage.setItem("st_closed", JSON.stringify(ids)); } catch (e) {}
+    });
+  });
+  // compact mode, remembered
+  const setCompact = (on) => {
+    document.body.classList.toggle("compact", on);
+    $("#compactBtn").classList.toggle("on", on);
+    try { localStorage.setItem("st_compact", on ? "1" : "0"); } catch (e) {}
+  };
+  let c0 = false; try { c0 = localStorage.getItem("st_compact") === "1"; } catch (e) {}
+  setCompact(c0);
+  $("#compactBtn").addEventListener("click", () => setCompact(!document.body.classList.contains("compact")));
 }
 
+let busy = false;
 async function exec(label, fn) {
+  busy = true;
   status("Working...");
   try {
     let msg;
     await PowerPoint.run(async (ctx) => { msg = await fn(ctx); });
-    status(msg || (label + " done."), "ok");
+    status(msg || ((label || "Done").split(" (")[0].split(":")[0] + ": done."), "ok");
   } catch (e) {
     const m = (e instanceof UErr) ? e.message : ("Didn't work: " + (e.message || e));
     status(m, "err");
     if (!(e instanceof UErr)) console.error(e);
-  }
+  } finally { busy = false; }
 }
 
 // ---------- selection & master tracking ----------
